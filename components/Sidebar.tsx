@@ -7,6 +7,7 @@ const navItems = [
   { href: "/", label: "ダッシュボード", icon: "📊" },
   { href: "/projects", label: "工事一覧", icon: "🏗️" },
   { href: "/staff", label: "担当者マスタ", icon: "👤" },
+  { href: "/import", label: "Excelインポート", icon: "📁" },
 ];
 
 export default function Sidebar() {
