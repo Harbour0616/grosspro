@@ -33,13 +33,21 @@ function parseExcel(file: File): Promise<ParsedData> {
           { header: 1, defval: null }
         );
 
-        const projectName = String(rows[2]?.[3] ?? "").trim();
-        const customerName = String(rows[3]?.[3] ?? "").trim();
+        const projectName = String(rows[3]?.[3] ?? "").trim();
+        const customerName = String(rows[4]?.[3] ?? "").trim();
         const contractAmount = Number(rows[8]?.[6]) || 0;
 
-        // ファイル名から年を推定 (例: "2024_工事名.xlsx")
-        const yearMatch = file.name.match(/(20\d{2})/);
-        const fileYear = yearMatch ? Number(yearMatch[1]) : new Date().getFullYear();
+        // ファイル名から令和年を推定 (例: "R7_工事名.xlsx" → 2025)
+        const reiwaMatch = file.name.match(/R(\d{1,2})/i);
+        const westernMatch = file.name.match(/(20\d{2})/);
+        let fileYear: number;
+        if (reiwaMatch) {
+          fileYear = 2018 + Number(reiwaMatch[1]); // R1=2019, R6=2024, R7=2025
+        } else if (westernMatch) {
+          fileYear = Number(westernMatch[1]);
+        } else {
+          fileYear = new Date().getFullYear();
+        }
 
         // 行21（index20）のヘッダーから月名を取得
         const headerRow = rows[20] ?? [];
@@ -287,7 +295,7 @@ export default function ImportPage() {
                           key={i}
                           className="px-4 py-3 font-medium text-right whitespace-nowrap"
                         >
-                          {m.month}月
+                          {m.year}年{m.month}月
                         </th>
                       ))}
                       <th className="px-4 py-3 font-medium text-right whitespace-nowrap">
