@@ -37,33 +37,22 @@ function parseExcel(file: File): Promise<ParsedData> {
         const customerName = String(rows[4]?.[3] ?? "").trim();
         const contractAmount = Number(rows[8]?.[6]) || 0;
 
-        // ファイル名から令和年を推定 (例: "R7_工事名.xlsx" → 2025)
-        const reiwaMatch = file.name.match(/R(\d{1,2})/i);
-        console.log('ファイル名:', file.name);
-        console.log('reiwaMatch:', reiwaMatch);
-        const westernMatch = file.name.match(/(20\d{2})/);
-        let fileYear: number;
-        if (reiwaMatch) {
-          fileYear = 2018 + Number(reiwaMatch[1]); // R1=2019, R6=2024, R7=2025
-        } else if (westernMatch) {
-          fileYear = Number(westernMatch[1]);
-        } else {
-          fileYear = new Date().getFullYear();
-        }
+        const rMatch = file.name.match(/R(\d{1,2})/i);
+        const reiwaNum = rMatch ? Number(rMatch[1]) : 7;
+        const baseYear = 2018 + reiwaNum;
 
-        // 行21（index20）のヘッダーから月名を取得
         const headerRow = rows[20] ?? [];
         const monthColumns: { col: number; year: number; month: number }[] = [];
         for (let col = 6; col <= 14; col++) {
           const cell = String(headerRow[col] ?? "").trim();
           const m = cell.match(/(\d{1,2})月/);
-          if (m) {
-            const month = Number(m[1]);
-            // 会計年度5月始まり: 5〜12月→前年、1〜4月→当年
-            const year = month >= 5 ? fileYear - 1 : fileYear;
-            monthColumns.push({ col, year, month });
-          }
+          if (!m) continue;
+          const month = Number(m[1]);
+          const year = month >= 5 ? baseYear - 1 : baseYear;
+          monthColumns.push({ col, year, month });
         }
+
+        console.log("baseYear:", baseYear, "monthColumns:", monthColumns);
 
         // 行22〜50（index21〜49）の原価明細
         const costs: CostRow[] = [];
