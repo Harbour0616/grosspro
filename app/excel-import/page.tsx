@@ -57,7 +57,8 @@ function parseExcel(file: File): Promise<ParsedData> {
           const m = cell.match(/(\d{1,2})月/);
           if (m) {
             const month = Number(m[1]);
-            const year = month >= 5 ? fileYear : fileYear + 1;
+            // 会計年度5月始まり: 5〜12月→前年、1〜4月→当年
+            const year = month >= 5 ? fileYear - 1 : fileYear;
             monthColumns.push({ col, year, month });
           }
         }
