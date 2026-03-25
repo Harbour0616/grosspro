@@ -39,6 +39,8 @@ function parseExcel(file: File): Promise<ParsedData> {
 
         // ファイル名から令和年を推定 (例: "R7_工事名.xlsx" → 2025)
         const reiwaMatch = file.name.match(/R(\d{1,2})/i);
+        console.log('ファイル名:', file.name);
+        console.log('reiwaMatch:', reiwaMatch);
         const westernMatch = file.name.match(/(20\d{2})/);
         let fileYear: number;
         if (reiwaMatch) {
