@@ -14,12 +14,20 @@ type ProjectRow = {
   grossProfitRate: number;
 };
 
+type Staff = { id: string; name: string };
+
 export default function ProjectsPage() {
   const [projects, setProjects] = useState<ProjectRow[]>([]);
   const [loading, setLoading] = useState(true);
+  const [staffList, setStaffList] = useState<Staff[]>([]);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [selectedStaffId, setSelectedStaffId] = useState("");
 
   useEffect(() => {
     fetchProjects();
+    supabase.from("staff").select("id, name").order("name").then(({ data }) => {
+      if (data) setStaffList(data);
+    });
   }, []);
 
   async function fetchProjects() {
@@ -65,6 +73,15 @@ export default function ProjectsPage() {
 
     setProjects(rows);
     setLoading(false);
+  }
+
+  async function handleStaffChange(projectId: string, staffId: string) {
+    await supabase
+      .from("projects")
+      .update({ staff_id: staffId || null })
+      .eq("id", projectId);
+    setEditingId(null);
+    fetchProjects();
   }
 
   const fmt = (n: number) =>
@@ -114,7 +131,29 @@ export default function ProjectsPage() {
                       {p.name}
                     </Link>
                   </td>
-                  <td className="px-6 py-3">{p.staffName}</td>
+                  <td className="px-6 py-3">
+                    {editingId === p.id ? (
+                      <select
+                        autoFocus
+                        value={selectedStaffId}
+                        onChange={(e) => handleStaffChange(p.id, e.target.value)}
+                        onBlur={() => setEditingId(null)}
+                        className="border border-gray-300 rounded-md px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      >
+                        <option value="">-- 未割当 --</option>
+                        {staffList.map((s) => (
+                          <option key={s.id} value={s.id}>{s.name}</option>
+                        ))}
+                      </select>
+                    ) : (
+                      <button
+                        onClick={() => { setEditingId(p.id); setSelectedStaffId(""); }}
+                        className="text-left hover:text-blue-600 cursor-pointer"
+                      >
+                        {p.staffName}
+                      </button>
+                    )}
+                  </td>
                   <td className="px-6 py-3 text-right">
                     {fmt(p.contractAmount)}
                   </td>
