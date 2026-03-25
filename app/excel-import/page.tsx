@@ -11,6 +11,7 @@ type CostRow = {
   item_name: string;
   monthly: { year: number; month: number; amount: number }[];
   total: number;
+  category?: string;
 };
 
 type ParsedData = {
@@ -87,6 +88,60 @@ function parseExcel(file: File): Promise<ParsedData> {
   });
 }
 
+function parseCsv(file: File): Promise<ParsedData> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const text = e.target!.result as string;
+        const lines = text.split(/\r?\n/).filter((l) => l.trim() !== "");
+        if (lines.length < 2) {
+          resolve({ projectName: "", customerName: "", contractAmount: 0, costs: [] });
+          return;
+        }
+
+        // ヘッダースキップ、2行目（index1）から取得
+        const firstRow = lines[1].split(",");
+        const projectName = (firstRow[0] ?? "").trim();
+        const customerName = (firstRow[1] ?? "").trim();
+        const contractAmount = Number(firstRow[2]) || 0;
+
+        const costs: CostRow[] = [];
+        for (let i = 1; i < lines.length; i++) {
+          const cols = lines[i].split(",");
+          const vendor_name = (cols[3] ?? "").trim();
+          const item_name = (cols[4] ?? "").trim();
+          const year = Number(cols[5]) || 0;
+          const month = Number(cols[6]) || 0;
+          const amount = Number(cols[7]) || 0;
+          const category = (cols[8] ?? "外注費").trim();
+          if (amount === 0) continue;
+
+          costs.push({
+            vendor_name,
+            item_name,
+            monthly: [{ year, month, amount }],
+            total: amount,
+            category,
+          });
+        }
+
+        resolve({ projectName, customerName, contractAmount, costs });
+      } catch (err) {
+        reject(err);
+      }
+    };
+    reader.onerror = () => reject(new Error("ファイル読み込みに失敗しました"));
+    reader.readAsText(file, "UTF-8");
+  });
+}
+
+function parseFile(file: File): Promise<ParsedData> {
+  const ext = file.name.split(".").pop()?.toLowerCase();
+  if (ext === "csv") return parseCsv(file);
+  return parseExcel(file);
+}
+
 export default function ImportPage() {
   const [staffList, setStaffList] = useState<Staff[]>([]);
   const [staffId, setStaffId] = useState("");
@@ -113,10 +168,10 @@ export default function ImportPage() {
     if (!file) return;
     setFileName(file.name);
     try {
-      const data = await parseExcel(file);
+      const data = await parseFile(file);
       setParsed(data);
     } catch {
-      setError("Excelファイルの解析に失敗しました。フォーマットを確認してください。");
+      setError("ファイルの解析に失敗しました。フォーマットを確認してください。");
       setParsed(null);
     }
   }, []);
@@ -146,7 +201,7 @@ export default function ImportPage() {
     const costRows = parsed.costs.flatMap((c) =>
       c.monthly.map((m) => ({
         project_id: project.id,
-        category: "外注費",
+        category: c.category ?? "外注費",
         amount: m.amount,
         memo: `${m.year}年${String(m.month).padStart(2, "0")}月`,
         item_name: c.item_name,
@@ -184,11 +239,11 @@ export default function ImportPage() {
         <div className="p-6">
           <label className="block">
             <span className="text-sm font-medium text-gray-700">
-              Excelファイル（.xls / .xlsx）
+              Excel / CSVファイル（.xls / .xlsx / .csv）
             </span>
             <input
               type="file"
-              accept=".xls,.xlsx"
+              accept=".xls,.xlsx,.csv"
               onChange={handleFile}
               className="mt-2 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
             />
