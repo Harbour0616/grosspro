@@ -1,37 +1,29 @@
-import type { LucideIcon } from "lucide-react";
-
-type Props = {
+import { cn } from "@/lib/utils";
+import { LucideIcon } from "lucide-react";
+interface KpiCardProps {
   title: string;
   value: string;
-  subtitle: string;
+  subtitle?: string;
   icon: LucideIcon;
   trend?: { value: string; positive: boolean };
-};
-
-export default function KpiCard({ title, value, subtitle, icon: Icon, trend }: Props) {
-  return (
-    <div className="bg-white rounded-xl border border-gray-200 p-5 space-y-3">
-      <div className="flex items-center justify-between">
-        <span className="text-sm text-gray-500">{title}</span>
-        <div className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center">
-          <Icon className="w-4 h-4 text-gray-600" />
-        </div>
-      </div>
-      <div className="text-2xl font-bold text-gray-900">{value}</div>
-      <div className="flex items-center gap-2">
-        {trend && (
-          <span
-            className={`text-xs font-medium px-1.5 py-0.5 rounded ${
-              trend.positive
-                ? "bg-green-50 text-green-700"
-                : "bg-red-50 text-red-700"
-            }`}
-          >
-            {trend.positive ? "+" : ""}{trend.value}
-          </span>
-        )}
-        <span className="text-xs text-gray-400">{subtitle}</span>
+}
+const KpiCard = ({ title, value, subtitle, icon: Icon, trend }: KpiCardProps) => (
+  <div className="rounded-2xl bg-card border border-border p-6 flex flex-col gap-3">
+    <div className="flex items-center justify-between">
+      <span className="text-sm font-medium text-muted-foreground">{title}</span>
+      <div className="w-10 h-10 rounded-xl bg-kpi-surface flex items-center justify-center">
+        <Icon className="w-5 h-5 text-primary" />
       </div>
     </div>
-  );
-}
+    <div className="flex items-end gap-2">
+      <span className="text-3xl font-bold tracking-tight text-foreground">{value}</span>
+      {trend && (
+        <span className={cn("text-sm font-medium mb-1", trend.positive ? "text-kpi-green" : "text-destructive")}>
+          {trend.positive ? "↑" : "↓"} {trend.value}
+        </span>
+      )}
+    </div>
+    {subtitle && <span className="text-xs text-muted-foreground">{subtitle}</span>}
+  </div>
+);
+export default KpiCard;
