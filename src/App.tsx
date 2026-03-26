@@ -43,7 +43,7 @@ export default function App() {
                 <KpiCard title="案件数" value="44件" subtitle="完了: 38件 / 進行中: 6件" icon={BarChart3} trend={{ value: "8件", positive: true }} />
                 <KpiCard title="平均案件粗利" value="¥345万" subtitle="前年: ¥310万" icon={Building2} trend={{ value: "11.3%", positive: true }} />
               </div>
-              <RankingTable onStaffClick={(id, name) => setPage({ name: "staffDetail", staffId: id, staffName: name })} />
+              <RankingTable />
             </>
           )}
           {page === "projects" && <Projects />}
