@@ -215,6 +215,7 @@ export default function Projects() {
             <thead>
               <tr className="border-b border-border bg-kpi-surface/50">
                 <th className="text-left text-xs font-medium text-muted-foreground px-4 md:px-6 py-3 min-w-[90px]">物件番号</th>
+                <th className="text-left text-xs font-medium text-muted-foreground px-4 md:px-6 py-3 min-w-[60px]">状況</th>
                 <th className="text-left text-xs font-medium text-muted-foreground px-4 md:px-6 py-3 min-w-[120px]">工事名</th>
                 <th className="text-left text-xs font-medium text-muted-foreground px-4 md:px-6 py-3 min-w-[80px]">顧客名</th>
                 <th className="text-left text-xs font-medium text-muted-foreground px-4 md:px-6 py-3 min-w-[70px]">担当者</th>
@@ -231,6 +232,14 @@ export default function Projects() {
               {projects.map((p) => (
                 <tr key={p.id} className="border-t border-border hover:bg-kpi-surface/30 transition-colors">
                   <td className="px-4 md:px-6 py-4 text-sm text-foreground">{p.project_number ?? "-"}</td>
+                  <td className="px-4 md:px-6 py-4">
+                    <span className={cn(
+                      "inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium",
+                      p.end_month ? "bg-primary/10 text-primary" : "bg-kpi-amber/10 text-kpi-amber"
+                    )}>
+                      {p.end_month ? "完工" : "進行中"}
+                    </span>
+                  </td>
                   <td className="px-4 md:px-6 py-4 font-semibold text-foreground">{p.name}</td>
                   <td className="px-4 md:px-6 py-4 text-sm text-muted-foreground">{p.customer_name ?? "-"}</td>
                   <td className="px-4 md:px-6 py-4 text-sm text-foreground">{p.staff?.name ?? "-"}</td>
@@ -285,7 +294,7 @@ export default function Projects() {
               ))}
               {projects.length === 0 && (
                 <tr>
-                  <td colSpan={11} className="px-6 py-12 text-center text-muted-foreground">工事データがありません</td>
+                  <td colSpan={12} className="px-6 py-12 text-center text-muted-foreground">工事データがありません</td>
                 </tr>
               )}
             </tbody>
