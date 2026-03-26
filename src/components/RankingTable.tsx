@@ -45,7 +45,7 @@ interface ProjectDetail {
 interface RankingTableProps {}
 
 const fmtFull = (n: number) => n.toLocaleString();
-const fmtMan = (n: number) => `${Math.floor(n / 10000)}万`;
+const fmtMan = (n: number) => `${Math.floor(n / 10000).toLocaleString()}万`;
 
 const rankColors: Record<number, string> = {
   1: "text-rank-gold",

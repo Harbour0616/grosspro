@@ -2,10 +2,10 @@ import { BarChart3, HardHat, Users, FileSpreadsheet } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const navItems = [
-  { id: "dashboard", label: "ダッシュボード", icon: BarChart3 },
-  { id: "projects", label: "工事一覧", icon: HardHat },
-  { id: "import", label: "Excel台帳インポート", icon: FileSpreadsheet },
-  { id: "staff", label: "担当者マスタ", icon: Users },
+  { id: "dashboard", label: "ダッシュボード", icon: BarChart3, mobileOnly: true },
+  { id: "projects", label: "工事一覧", icon: HardHat, mobileOnly: false },
+  { id: "import", label: "Excel台帳インポート", icon: FileSpreadsheet, mobileOnly: false },
+  { id: "staff", label: "担当者マスタ", icon: Users, mobileOnly: false },
 ];
 
 interface SidebarProps {
@@ -37,7 +37,7 @@ export default function Sidebar({ active, onNavigate, open, onClose }: SidebarPr
             {navItems.map((item) => {
               const isActive = active === item.id;
               return (
-                <li key={item.id}>
+                <li key={item.id} className={cn(!item.mobileOnly && "hidden md:block")}>
                   <button
                     onClick={() => { onNavigate(item.id); onClose(); }}
                     className={cn(
