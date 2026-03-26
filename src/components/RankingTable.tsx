@@ -138,9 +138,9 @@ export default function RankingTable({ onProjectClick }: RankingTableProps) {
             <tr className="border-t border-border bg-kpi-surface/50">
               <th className="text-left text-xs font-medium text-muted-foreground px-4 md:px-6 py-3 w-12 md:w-16">順位</th>
               <th className="text-left text-xs font-medium text-muted-foreground px-4 md:px-6 py-3 min-w-[80px]">担当者</th>
-              <th className="text-right text-xs font-medium text-muted-foreground px-4 md:px-6 py-3 min-w-[90px]">契約合計</th>
-              <th className="text-right text-xs font-medium text-muted-foreground px-4 md:px-6 py-3 min-w-[90px]">経費合計</th>
-              <th className="text-right text-xs font-medium text-muted-foreground px-4 md:px-6 py-3 min-w-[90px]">粗利額</th>
+              <th className="text-right text-xs font-medium text-muted-foreground px-4 md:px-6 py-3 min-w-[90px]">売上</th>
+              <th className="text-right text-xs font-medium text-muted-foreground px-4 md:px-6 py-3 min-w-[90px]">原価</th>
+              <th className="text-right text-xs font-medium text-muted-foreground px-4 md:px-6 py-3 min-w-[90px]">粗利</th>
               <th className="text-right text-xs font-medium text-muted-foreground px-4 md:px-6 py-3">粗利率</th>
               <th className="text-right text-xs font-medium text-muted-foreground px-4 md:px-6 py-3">案件数</th>
               <th className="w-10" />
