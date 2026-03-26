@@ -16,10 +16,24 @@ interface Project {
   staff_id: string | null;
   contract_amount: number | null;
   cost_amount: number | null;
+  start_month: string | null;
+  end_month: string | null;
   staff?: Staff;
   grossProfit: number;
   profitRate: number;
 }
+
+interface EditForm {
+  name: string;
+  customer_name: string;
+  staff_id: string;
+  contract_amount: string;
+  cost_amount: string;
+  start_month: string;
+  end_month: string;
+}
+
+const emptyEditForm: EditForm = { name: "", customer_name: "", staff_id: "", contract_amount: "", cost_amount: "", start_month: "", end_month: "" };
 
 export default function Projects() {
   const [projects, setProjects] = useState<Project[]>([]);
@@ -31,11 +45,12 @@ export default function Projects() {
   const [inlineValue, setInlineValue] = useState("");
   const [inlineSaving, setInlineSaving] = useState(false);
   const [editTarget, setEditTarget] = useState<Project | null>(null);
-  const [editForm, setEditForm] = useState({ name: "", customer_name: "", staff_id: "" });
+  const [panelOpen, setPanelOpen] = useState(false);
+  const [editForm, setEditForm] = useState<EditForm>(emptyEditForm);
 
   async function load() {
     const [{ data: pj }, { data: st }] = await Promise.all([
-      supabase.from("projects").select("id, project_number, name, customer_name, staff_id, contract_amount, cost_amount"),
+      supabase.from("projects").select("id, project_number, name, customer_name, staff_id, contract_amount, cost_amount, start_month, end_month"),
       supabase.from("staff").select("id, name"),
     ]);
     if (!pj || !st) return;
@@ -71,7 +86,21 @@ export default function Projects() {
 
   function openEdit(p: Project) {
     setEditTarget(p);
-    setEditForm({ name: p.name, customer_name: p.customer_name ?? "", staff_id: p.staff_id ?? "" });
+    setEditForm({
+      name: p.name,
+      customer_name: p.customer_name ?? "",
+      staff_id: p.staff_id ?? "",
+      contract_amount: p.contract_amount ? String(p.contract_amount) : "",
+      cost_amount: p.cost_amount ? String(p.cost_amount) : "",
+      start_month: p.start_month ?? "",
+      end_month: p.end_month ?? "",
+    });
+    setPanelOpen(true);
+  }
+
+  function closePanel() {
+    setPanelOpen(false);
+    setTimeout(() => setEditTarget(null), 300);
   }
 
   async function handleEditSave(e: React.FormEvent) {
@@ -82,11 +111,15 @@ export default function Projects() {
       name: editForm.name,
       customer_name: editForm.customer_name || null,
       staff_id: editForm.staff_id || null,
+      contract_amount: editForm.contract_amount ? Number(editForm.contract_amount) : null,
+      cost_amount: editForm.cost_amount ? Number(editForm.cost_amount) : null,
+      start_month: editForm.start_month || null,
+      end_month: editForm.end_month || null,
     }).eq("id", editTarget.id);
     setSaving(false);
     if (error) { alert("更新失敗: " + error.message); return; }
     await load();
-    setEditTarget(null);
+    closePanel();
   }
 
   async function handleDelete(p: Project) {
@@ -234,18 +267,24 @@ export default function Projects() {
         </div>
       </div>
 
-      {/* Edit modal */}
+      {/* Edit side panel */}
       {editTarget && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
-          <div className="absolute inset-0 bg-black/40" onClick={() => setEditTarget(null)} />
-          <form onSubmit={handleEditSave} className="relative z-10 w-full max-w-lg rounded-2xl bg-card border border-border p-6 space-y-4 shadow-xl">
-            <div className="flex items-center justify-between">
-              <h3 className="text-lg font-bold text-foreground">工事編集</h3>
-              <button type="button" onClick={() => setEditTarget(null)} className="p-1 rounded-lg hover:bg-muted transition-colors">
+        <div className="fixed inset-0 z-50">
+          <div className={cn("absolute inset-0 bg-black/40 transition-opacity duration-300", panelOpen ? "opacity-100" : "opacity-0")} onClick={closePanel} />
+          <form
+            onSubmit={handleEditSave}
+            className={cn(
+              "absolute top-0 right-0 h-full w-full md:w-96 bg-card border-l border-border shadow-xl flex flex-col transition-transform duration-300 ease-out",
+              panelOpen ? "translate-x-0" : "translate-x-full"
+            )}
+          >
+            <div className="flex items-center justify-between px-6 py-4 border-b border-border">
+              <h3 className="text-lg font-bold text-foreground">編集</h3>
+              <button type="button" onClick={closePanel} className="p-1.5 rounded-lg hover:bg-muted transition-colors">
                 <X className="w-5 h-5 text-muted-foreground" />
               </button>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="flex-1 overflow-y-auto px-6 py-5 space-y-4">
               <div>
                 <label className="block text-sm font-medium text-foreground mb-1">工事名 *</label>
                 <input required value={editForm.name} onChange={(e) => setEditForm({ ...editForm, name: e.target.value })} className="w-full px-3 py-2 rounded-lg border border-input bg-background text-foreground text-sm" />
@@ -261,10 +300,26 @@ export default function Projects() {
                   {staffList.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
                 </select>
               </div>
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-1">契約金額</label>
+                <input type="number" value={editForm.contract_amount} onChange={(e) => setEditForm({ ...editForm, contract_amount: e.target.value })} className="w-full px-3 py-2 rounded-lg border border-input bg-background text-foreground text-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" placeholder="例: 50000000" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-1">現場経費</label>
+                <input type="number" value={editForm.cost_amount} onChange={(e) => setEditForm({ ...editForm, cost_amount: e.target.value })} className="w-full px-3 py-2 rounded-lg border border-input bg-background text-foreground text-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" placeholder="例: 35000000" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-1">着工月</label>
+                <input value={editForm.start_month} onChange={(e) => setEditForm({ ...editForm, start_month: e.target.value })} className="w-full px-3 py-2 rounded-lg border border-input bg-background text-foreground text-sm" placeholder="例: 2024年10月" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-1">完工月</label>
+                <input value={editForm.end_month} onChange={(e) => setEditForm({ ...editForm, end_month: e.target.value })} className="w-full px-3 py-2 rounded-lg border border-input bg-background text-foreground text-sm" placeholder="例: 2025年3月" />
+              </div>
             </div>
-            <div className="flex justify-end gap-3 pt-2">
-              <button type="button" onClick={() => setEditTarget(null)} className="px-4 py-2 rounded-lg border border-border text-sm font-medium text-foreground hover:bg-muted transition-colors">キャンセル</button>
-              <button type="submit" disabled={saving} className="px-6 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-50">
+            <div className="px-6 py-4 border-t border-border flex gap-3">
+              <button type="button" onClick={closePanel} className="flex-1 px-4 py-2 rounded-lg border border-border text-sm font-medium text-foreground hover:bg-muted transition-colors">キャンセル</button>
+              <button type="submit" disabled={saving} className="flex-1 px-6 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-50">
                 {saving ? "保存中..." : "保存"}
               </button>
             </div>
