@@ -85,8 +85,8 @@ export default function Projects() {
     }).eq("id", editTarget.id);
     setSaving(false);
     if (error) { alert("更新失敗: " + error.message); return; }
+    await load();
     setEditTarget(null);
-    load();
   }
 
   async function handleDelete(p: Project) {
