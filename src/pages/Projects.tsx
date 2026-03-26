@@ -52,9 +52,9 @@ export default function Projects() {
       const totalCost = (costs ?? [])
         .filter((c) => c.project_id === p.id)
         .reduce((sum, c) => sum + (c.amount ?? 0), 0);
-      const sales = p.sales_amount ?? 0;
-      const grossProfit = sales - totalCost;
-      const profitRate = sales > 0 ? (grossProfit / sales) * 100 : 0;
+      const contract = p.contract_amount ?? 0;
+      const grossProfit = contract - totalCost;
+      const profitRate = contract > 0 ? (grossProfit / contract) * 100 : 0;
       return {
         ...p,
         staff: st.find((s) => s.id === p.staff_id),
@@ -211,10 +211,10 @@ export default function Projects() {
                   </td>
                   <td className="px-4 md:px-6 py-4 text-right text-sm text-foreground tabular-nums">{fmt(p.totalCost)}</td>
                   <td className="px-4 md:px-6 py-4 text-right font-semibold text-foreground tabular-nums">
-                    {(p.sales_amount ?? 0) > 0 ? fmt(p.grossProfit) : "-"}
+                    {(p.contract_amount ?? 0) > 0 ? fmt(p.grossProfit) : "-"}
                   </td>
                   <td className="px-4 md:px-6 py-4 text-right">
-                    {(p.sales_amount ?? 0) > 0 ? (
+                    {(p.contract_amount ?? 0) > 0 ? (
                       <span className={cn(
                         "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium",
                         p.profitRate >= 25 ? "bg-primary/10 text-primary" : "bg-kpi-amber/10 text-kpi-amber"
