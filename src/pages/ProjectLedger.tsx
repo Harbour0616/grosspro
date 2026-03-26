@@ -157,8 +157,8 @@ export default function ProjectLedger({ projectId, projectName, onBack }: Projec
           <table className="w-full text-sm">
             <thead>
               <tr className="border-t border-border bg-kpi-surface">
-                <th className="text-left text-xs font-medium text-muted-foreground px-4 py-3 whitespace-nowrap sticky left-0 bg-kpi-surface z-10">業者名</th>
-                <th className="text-left text-xs font-medium text-muted-foreground px-4 py-3 whitespace-nowrap">工種</th>
+                <th className="text-left text-xs font-medium text-muted-foreground px-4 py-3 whitespace-nowrap sticky left-0 bg-kpi-surface z-20 min-w-[120px]">業者名</th>
+                <th className="text-left text-xs font-medium text-muted-foreground px-4 py-3 whitespace-nowrap sticky left-[120px] bg-kpi-surface z-20 min-w-[120px]">工種</th>
                 {months.map((m) => (
                   <th key={m} className="text-right text-xs font-medium text-muted-foreground px-4 py-3 whitespace-nowrap min-w-[100px]">{m}</th>
                 ))}
@@ -168,8 +168,8 @@ export default function ProjectLedger({ projectId, projectName, onBack }: Projec
             <tbody>
               {pivotRows.map((row, i) => (
                 <tr key={i} className="border-t border-border hover:bg-kpi-surface/30 transition-colors">
-                  <td className="px-4 py-3 text-foreground whitespace-nowrap sticky left-0 bg-card z-10">{row.vendor}</td>
-                  <td className="px-4 py-3 text-foreground whitespace-nowrap">{row.item}</td>
+                  <td className="px-4 py-3 text-foreground whitespace-nowrap sticky left-0 bg-card z-10 min-w-[120px]">{row.vendor}</td>
+                  <td className="px-4 py-3 text-foreground whitespace-nowrap sticky left-[120px] bg-card z-10 min-w-[120px]">{row.item}</td>
                   {months.map((m) => (
                     <td key={m} className="px-4 py-3 text-right text-foreground tabular-nums">
                       {row.byMonth[m] ? fmt(row.byMonth[m]) : ""}
@@ -187,7 +187,8 @@ export default function ProjectLedger({ projectId, projectName, onBack }: Projec
               )}
               {pivotRows.length > 0 && (
                 <tr className="border-t-2 border-border bg-kpi-surface font-bold">
-                  <td className="px-4 py-3 text-foreground sticky left-0 bg-kpi-surface z-10" colSpan={2}>合計</td>
+                  <td className="px-4 py-3 text-foreground sticky left-0 bg-kpi-surface z-10 min-w-[120px]">合計</td>
+                  <td className="px-4 py-3 sticky left-[120px] bg-kpi-surface z-10 min-w-[120px]"></td>
                   {months.map((m) => (
                     <td key={m} className="px-4 py-3 text-right text-foreground tabular-nums">
                       {monthTotals[m] ? fmt(monthTotals[m]) : ""}
