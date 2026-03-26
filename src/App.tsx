@@ -1,8 +1,8 @@
 import { TrendingUp, Percent, Building2, BarChart3 } from "lucide-react";
-import KpiCard from "@/components/KpiCard";
-import RankingTable from "@/components/RankingTable";
+import KpiCard from "./components/KpiCard";
+import RankingTable from "./components/RankingTable";
 
-export default function Page() {
+export default function App() {
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b border-border bg-card/80 backdrop-blur-sm sticky top-0 z-10">

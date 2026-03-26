@@ -1,5 +1,3 @@
-"use client";
-
 import { cn } from "@/lib/utils";
 import { Trophy } from "lucide-react";
 import { useEffect, useState } from "react";
