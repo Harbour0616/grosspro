@@ -1,5 +1,6 @@
 import { cn } from "@/lib/utils";
 import { LucideIcon } from "lucide-react";
+
 interface KpiCardProps {
   title: string;
   value: string;
@@ -7,6 +8,7 @@ interface KpiCardProps {
   icon: LucideIcon;
   trend?: { value: string; positive: boolean };
 }
+
 const KpiCard = ({ title, value, subtitle, icon: Icon, trend }: KpiCardProps) => (
   <div className="rounded-2xl bg-card border border-border p-6 flex flex-col gap-3">
     <div className="flex items-center justify-between">
@@ -26,4 +28,5 @@ const KpiCard = ({ title, value, subtitle, icon: Icon, trend }: KpiCardProps) =>
     {subtitle && <span className="text-xs text-muted-foreground">{subtitle}</span>}
   </div>
 );
+
 export default KpiCard;

@@ -1,4 +1,5 @@
 "use client";
+
 import { cn } from "@/lib/utils";
 import { Trophy } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -34,18 +35,14 @@ export default function RankingTable() {
         const myProjects = projects.filter((p) => p.staff_id === s.id);
         const totalSales = myProjects.reduce((sum, p) => sum + (p.contract_amount ?? 0), 0);
         const totalCost = myProjects.reduce((sum, p) => {
-          const c = costs.filter((c) => c.project_id === p.id).reduce((a, b) => a + (b.amount ?? 0), 0);
-          return sum + c;
+          return sum + costs.filter((c) => c.project_id === p.id).reduce((a, b) => a + (b.amount ?? 0), 0);
         }, 0);
         const grossProfit = totalSales - totalCost;
         const profitRate = totalSales > 0 ? (grossProfit / totalSales) * 100 : 0;
         return { name: s.name, grossProfit, profitRate, projects: myProjects.length };
       });
 
-      const sorted = entries
-        .sort((a, b) => b.grossProfit - a.grossProfit)
-        .map((e, i) => ({ ...e, rank: i + 1 }));
-      setData(sorted);
+      setData(entries.sort((a, b) => b.grossProfit - a.grossProfit).map((e, i) => ({ ...e, rank: i + 1 })));
     }
     load();
   }, []);
@@ -75,12 +72,8 @@ export default function RankingTable() {
                     {entry.rank}
                   </span>
                 </td>
-                <td className="px-6 py-4">
-                  <span className="font-semibold text-foreground">{entry.name}</span>
-                </td>
-                <td className="px-6 py-4 text-right">
-                  <span className="font-semibold text-foreground">{formatYen(entry.grossProfit)}</span>
-                </td>
+                <td className="px-6 py-4 font-semibold text-foreground">{entry.name}</td>
+                <td className="px-6 py-4 text-right font-semibold text-foreground">{formatYen(entry.grossProfit)}</td>
                 <td className="px-6 py-4 text-right">
                   <span className={cn(
                     "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium",
@@ -89,9 +82,7 @@ export default function RankingTable() {
                     {entry.profitRate.toFixed(1)}%
                   </span>
                 </td>
-                <td className="px-6 py-4 text-right">
-                  <span className="text-sm text-muted-foreground">{entry.projects}件</span>
-                </td>
+                <td className="px-6 py-4 text-right text-sm text-muted-foreground">{entry.projects}件</td>
               </tr>
             ))}
           </tbody>
