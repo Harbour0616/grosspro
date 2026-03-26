@@ -23,7 +23,7 @@ interface ProjectLedgerProps {
   onBack: () => void;
 }
 
-const fmtYen = (n: number) => `¥${n.toLocaleString()}`;
+const fmtYen = (n: number) => `${n.toLocaleString()}円`;
 
 export default function ProjectLedger({ projectId, projectName, onBack }: ProjectLedgerProps) {
   const [project, setProject] = useState<ProjectData | null>(null);

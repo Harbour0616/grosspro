@@ -128,10 +128,7 @@ export default function ExcelImport() {
     setImporting(false);
   }
 
-  const formatYen = (n: number) =>
-    n >= 100000000
-      ? `¥${(n / 100000000).toFixed(2)}億`
-      : `¥${(n / 10000).toFixed(0)}万`;
+  const formatYen = (n: number) => `${n.toLocaleString()}円`;
 
   return (
     <div className="space-y-6">

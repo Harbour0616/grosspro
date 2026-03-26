@@ -43,10 +43,7 @@ export default function StaffDetail({ staffId, staffName, onBack }: StaffDetailP
     load();
   }, [staffId]);
 
-  const formatYen = (n: number) =>
-    n >= 100000000
-      ? `¥${(n / 100000000).toFixed(2)}億`
-      : `¥${(n / 10000).toFixed(0)}万`;
+  const formatYen = (n: number) => `${n.toLocaleString()}円`;
 
   const totalSales = projects.reduce((s, p) => s + p.sales_amount, 0);
   const totalCost = projects.reduce((s, p) => s + p.totalCost, 0);
