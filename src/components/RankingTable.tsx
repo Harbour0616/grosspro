@@ -213,14 +213,7 @@ export default function RankingTable({ onProjectClick }: RankingTableProps) {
                                   <tr key={d.id} className="border-t border-border/50">
                                     <td className="py-2 text-sm text-foreground">
                                       <span className="inline-flex items-center gap-2">
-                                        {onProjectClick ? (
-                                          <button
-                                            onClick={(e) => { e.stopPropagation(); onProjectClick(d.id, d.name); }}
-                                            className="hover:text-primary hover:underline transition-colors text-left"
-                                          >
-                                            {d.name}
-                                          </button>
-                                        ) : d.name}
+                                        {d.name}
                                         <span className={cn(
                                           "inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium whitespace-nowrap",
                                           d.endMonth ? "bg-primary/10 text-primary" : "bg-kpi-amber/10 text-kpi-amber"
