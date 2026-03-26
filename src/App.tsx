@@ -26,7 +26,7 @@ export default function App() {
       <Sidebar active={activeSidebar} onNavigate={setPage} />
       <div className="flex-1 overflow-auto">
         <header className="border-b border-border bg-card/80 backdrop-blur-sm sticky top-0 z-10">
-          <div className="max-w-6xl mx-auto px-6 py-4 flex items-center gap-3">
+          <div className="max-w-full mx-auto px-4 py-4 flex items-center gap-3">
             <div className="w-9 h-9 rounded-xl bg-primary flex items-center justify-center">
               <Building2 className="w-5 h-5 text-primary-foreground" />
             </div>
@@ -36,7 +36,7 @@ export default function App() {
             </div>
           </div>
         </header>
-        <main className="max-w-6xl mx-auto px-6 py-8 space-y-8">
+        <main className="max-w-full mx-auto px-4 py-8 space-y-8">
           {page === "dashboard" && (
             <>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
