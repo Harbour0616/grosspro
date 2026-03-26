@@ -97,16 +97,16 @@ export default function RankingTable({ onProjectClick }: RankingTableProps) {
         <h2 className="text-lg font-bold text-foreground">担当者別 粗利ランキング</h2>
       </div>
       <div className="overflow-x-auto">
-        <table className="w-full">
+        <table className="w-full min-w-[700px]">
           <thead>
             <tr className="border-t border-border bg-kpi-surface/50">
-              <th className="text-left text-xs font-medium text-muted-foreground px-6 py-3 w-16">順位</th>
-              <th className="text-left text-xs font-medium text-muted-foreground px-6 py-3">担当者</th>
-              <th className="text-right text-xs font-medium text-muted-foreground px-6 py-3">売上合計</th>
-              <th className="text-right text-xs font-medium text-muted-foreground px-6 py-3">原価合計</th>
-              <th className="text-right text-xs font-medium text-muted-foreground px-6 py-3">粗利額</th>
-              <th className="text-right text-xs font-medium text-muted-foreground px-6 py-3">粗利率</th>
-              <th className="text-right text-xs font-medium text-muted-foreground px-6 py-3">案件数</th>
+              <th className="text-left text-xs font-medium text-muted-foreground px-4 md:px-6 py-3 w-12 md:w-16">順位</th>
+              <th className="text-left text-xs font-medium text-muted-foreground px-4 md:px-6 py-3 min-w-[80px]">担当者</th>
+              <th className="text-right text-xs font-medium text-muted-foreground px-4 md:px-6 py-3 min-w-[90px]">売上合計</th>
+              <th className="text-right text-xs font-medium text-muted-foreground px-4 md:px-6 py-3 min-w-[90px]">原価合計</th>
+              <th className="text-right text-xs font-medium text-muted-foreground px-4 md:px-6 py-3 min-w-[90px]">粗利額</th>
+              <th className="text-right text-xs font-medium text-muted-foreground px-4 md:px-6 py-3">粗利率</th>
+              <th className="text-right text-xs font-medium text-muted-foreground px-4 md:px-6 py-3">案件数</th>
               <th className="w-10" />
             </tr>
           </thead>
@@ -123,16 +123,16 @@ export default function RankingTable({ onProjectClick }: RankingTableProps) {
                       isOpen ? "bg-kpi-surface/60" : "hover:bg-kpi-surface/30"
                     )}
                   >
-                    <td className="px-6 py-4">
+                    <td className="px-4 md:px-6 py-4">
                       <span className={cn("text-lg font-bold", rankColors[entry.rank] || "text-muted-foreground")}>
                         {entry.rank}
                       </span>
                     </td>
-                    <td className="px-6 py-4 font-semibold text-foreground">{entry.name}</td>
-                    <td className="px-6 py-4 text-right text-sm text-foreground tabular-nums">{fmt(entry.totalSales)}</td>
-                    <td className="px-6 py-4 text-right text-sm text-foreground tabular-nums">{fmt(entry.totalCost)}</td>
-                    <td className="px-6 py-4 text-right font-semibold text-foreground tabular-nums">{fmt(entry.grossProfit)}</td>
-                    <td className="px-6 py-4 text-right">
+                    <td className="px-4 md:px-6 py-4 font-semibold text-foreground">{entry.name}</td>
+                    <td className="px-4 md:px-6 py-4 text-right text-sm text-foreground tabular-nums">{fmt(entry.totalSales)}</td>
+                    <td className="px-4 md:px-6 py-4 text-right text-sm text-foreground tabular-nums">{fmt(entry.totalCost)}</td>
+                    <td className="px-4 md:px-6 py-4 text-right font-semibold text-foreground tabular-nums">{fmt(entry.grossProfit)}</td>
+                    <td className="px-4 md:px-6 py-4 text-right">
                       <span className={cn(
                         "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium",
                         entry.profitRate >= 25 ? "bg-primary/10 text-primary" : "bg-kpi-amber/10 text-kpi-amber"
@@ -140,8 +140,8 @@ export default function RankingTable({ onProjectClick }: RankingTableProps) {
                         {entry.profitRate.toFixed(1)}%
                       </span>
                     </td>
-                    <td className="px-6 py-4 text-right text-sm text-muted-foreground">{entry.projects}件</td>
-                    <td className="px-4 py-4 text-muted-foreground">
+                    <td className="px-4 md:px-6 py-4 text-right text-sm text-muted-foreground">{entry.projects}件</td>
+                    <td className="px-2 md:px-4 py-4 text-muted-foreground">
                       {isOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
                     </td>
                   </tr>

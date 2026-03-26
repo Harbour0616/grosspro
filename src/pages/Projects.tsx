@@ -187,33 +187,33 @@ export default function Projects() {
 
       <div className="rounded-2xl bg-card border border-border overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full">
+          <table className="w-full min-w-[800px]">
             <thead>
               <tr className="border-b border-border bg-kpi-surface/50">
-                <th className="text-left text-xs font-medium text-muted-foreground px-6 py-3">工事名</th>
-                <th className="text-left text-xs font-medium text-muted-foreground px-6 py-3">顧客名</th>
-                <th className="text-left text-xs font-medium text-muted-foreground px-6 py-3">担当者</th>
-                <th className="text-right text-xs font-medium text-muted-foreground px-6 py-3">請負金額</th>
-                <th className="text-right text-xs font-medium text-muted-foreground px-6 py-3">原価合計</th>
-                <th className="text-right text-xs font-medium text-muted-foreground px-6 py-3">粗利</th>
-                <th className="text-right text-xs font-medium text-muted-foreground px-6 py-3">粗利率</th>
-                <th className="text-right text-xs font-medium text-muted-foreground px-6 py-3 w-20">操作</th>
+                <th className="text-left text-xs font-medium text-muted-foreground px-4 md:px-6 py-3 min-w-[120px]">工事名</th>
+                <th className="text-left text-xs font-medium text-muted-foreground px-4 md:px-6 py-3 min-w-[80px]">顧客名</th>
+                <th className="text-left text-xs font-medium text-muted-foreground px-4 md:px-6 py-3 min-w-[70px]">担当者</th>
+                <th className="text-right text-xs font-medium text-muted-foreground px-4 md:px-6 py-3 min-w-[90px]">請負金額</th>
+                <th className="text-right text-xs font-medium text-muted-foreground px-4 md:px-6 py-3 min-w-[90px]">原価合計</th>
+                <th className="text-right text-xs font-medium text-muted-foreground px-4 md:px-6 py-3 min-w-[90px]">粗利</th>
+                <th className="text-right text-xs font-medium text-muted-foreground px-4 md:px-6 py-3 min-w-[70px]">粗利率</th>
+                <th className="text-right text-xs font-medium text-muted-foreground px-4 md:px-6 py-3 w-20">操作</th>
               </tr>
             </thead>
             <tbody>
               {projects.map((p) => (
                 <tr key={p.id} className="border-t border-border hover:bg-kpi-surface/30 transition-colors">
-                  <td className="px-6 py-4 font-semibold text-foreground">{p.name}</td>
-                  <td className="px-6 py-4 text-sm text-muted-foreground">{p.customer_name ?? "-"}</td>
-                  <td className="px-6 py-4 text-sm text-foreground">{p.staff?.name ?? "-"}</td>
-                  <td className="px-6 py-4 text-right text-sm text-foreground tabular-nums">
+                  <td className="px-4 md:px-6 py-4 font-semibold text-foreground">{p.name}</td>
+                  <td className="px-4 md:px-6 py-4 text-sm text-muted-foreground">{p.customer_name ?? "-"}</td>
+                  <td className="px-4 md:px-6 py-4 text-sm text-foreground">{p.staff?.name ?? "-"}</td>
+                  <td className="px-4 md:px-6 py-4 text-right text-sm text-foreground tabular-nums">
                     {p.contract_amount ? fmt(p.contract_amount) : "-"}
                   </td>
-                  <td className="px-6 py-4 text-right text-sm text-foreground tabular-nums">{fmt(p.totalCost)}</td>
-                  <td className="px-6 py-4 text-right font-semibold text-foreground tabular-nums">
+                  <td className="px-4 md:px-6 py-4 text-right text-sm text-foreground tabular-nums">{fmt(p.totalCost)}</td>
+                  <td className="px-4 md:px-6 py-4 text-right font-semibold text-foreground tabular-nums">
                     {(p.sales_amount ?? 0) > 0 ? fmt(p.grossProfit) : "-"}
                   </td>
-                  <td className="px-6 py-4 text-right">
+                  <td className="px-4 md:px-6 py-4 text-right">
                     {(p.sales_amount ?? 0) > 0 ? (
                       <span className={cn(
                         "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium",
@@ -223,18 +223,18 @@ export default function Projects() {
                       </span>
                     ) : "-"}
                   </td>
-                  <td className="px-6 py-4 text-right">
+                  <td className="px-4 md:px-6 py-4 text-right">
                     <div className="inline-flex gap-1">
                       <button
                         onClick={() => openEdit(p)}
-                        className="p-1.5 rounded-lg hover:bg-primary/10 text-muted-foreground hover:text-primary transition-colors"
+                        className="p-2.5 rounded-lg hover:bg-primary/10 text-muted-foreground hover:text-primary transition-colors"
                         title="編集"
                       >
                         <Pencil className="w-4 h-4" />
                       </button>
                       <button
                         onClick={() => handleDelete(p)}
-                        className="p-1.5 rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
+                        className="p-2.5 rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
                         title="削除"
                       >
                         <Trash2 className="w-4 h-4" />
