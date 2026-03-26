@@ -190,22 +190,22 @@ export default function RankingTable(_props: RankingTableProps) {
                           {details.length === 0 ? (
                             <p className="text-sm text-muted-foreground py-2">担当工事がありません</p>
                           ) : (
-                            <table className="w-full">
+                            <table className="w-full" style={{ tableLayout: "fixed" }}>
                               <thead>
                                 <tr>
-                                  <th className="text-left text-xs font-medium text-muted-foreground pb-2">工事名</th>
-                                  <th className="text-right text-xs font-medium text-muted-foreground pb-2">売上</th>
-                                  <th className="text-right text-xs font-medium text-muted-foreground pb-2">原価</th>
-                                  <th className="text-right text-xs font-medium text-muted-foreground pb-2">粗利</th>
-                                  <th className="text-right text-xs font-medium text-muted-foreground pb-2">粗利率</th>
+                                  <th className="text-left text-xs font-medium text-muted-foreground pb-2" style={{ width: "28%" }}>工事名</th>
+                                  <th className="text-right text-xs font-medium text-muted-foreground pb-2" style={{ width: "18%" }}>売上</th>
+                                  <th className="text-right text-xs font-medium text-muted-foreground pb-2" style={{ width: "18%" }}>原価</th>
+                                  <th className="text-right text-xs font-medium text-muted-foreground pb-2" style={{ width: "18%" }}>粗利</th>
+                                  <th className="text-right text-xs font-medium text-muted-foreground pb-2" style={{ width: "18%" }}>粗利率</th>
                                 </tr>
                               </thead>
                               <tbody>
                                 {details.map((d) => (
                                   <tr key={d.id} className="border-t border-border/50">
-                                    <td className="py-2 text-sm text-foreground">
+                                    <td className="py-2 text-sm text-foreground overflow-hidden text-ellipsis whitespace-nowrap">
                                       <span className="inline-flex items-center gap-2">
-                                        {d.name}
+                                        <span className="overflow-hidden text-ellipsis whitespace-nowrap">{d.name}</span>
                                         <span className={cn(
                                           "inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium whitespace-nowrap",
                                           d.endMonth ? "bg-primary/10 text-primary" : "bg-kpi-amber/10 text-kpi-amber"
