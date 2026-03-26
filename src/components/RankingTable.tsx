@@ -1,6 +1,6 @@
 import { cn } from "@/lib/utils";
 import { Trophy, ChevronDown, ChevronUp } from "lucide-react";
-import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { supabase } from "@/lib/supabase";
 
 function useIsMobile(breakpoint = 768) {
@@ -13,8 +13,9 @@ function useIsMobile(breakpoint = 768) {
   return useSyncExternalStore(subscribe, getSnapshot, () => false);
 }
 
+type SortKey = "grossProfit" | "totalContract" | "projects";
+
 interface RankingEntry {
-  rank: number;
   staffId: string;
   name: string;
   totalContract: number;
@@ -49,7 +50,8 @@ const rankColors: Record<number, string> = {
 export default function RankingTable({ onProjectClick }: RankingTableProps) {
   const isMobile = useIsMobile();
   const fmt = isMobile ? fmtMan : fmtFull;
-  const [data, setData] = useState<RankingEntry[]>([]);
+  const [rawData, setRawData] = useState<RankingEntry[]>([]);
+  const [sortKey, setSortKey] = useState<SortKey>("grossProfit");
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [details, setDetails] = useState<ProjectDetail[]>([]);
   const [loadingDetail, setLoadingDetail] = useState(false);
@@ -60,7 +62,7 @@ export default function RankingTable({ onProjectClick }: RankingTableProps) {
       const { data: projects } = await supabase.from("projects").select("id, staff_id, contract_amount, cost_amount");
       if (!staff || !projects) return;
 
-      const entries = staff.map((s) => {
+      const entries: RankingEntry[] = staff.map((s) => {
         const myProjects = projects.filter((p) => p.staff_id === s.id);
         const totalContract = myProjects.reduce((sum, p) => sum + (p.contract_amount ?? 0), 0);
         const totalCost = myProjects.reduce((sum, p) => sum + (p.cost_amount ?? 0), 0);
@@ -68,11 +70,15 @@ export default function RankingTable({ onProjectClick }: RankingTableProps) {
         const profitRate = totalContract > 0 ? (grossProfit / totalContract) * 100 : 0;
         return { staffId: s.id, name: s.name, totalContract, totalCost, grossProfit, profitRate, projects: myProjects.length };
       });
-
-      setData(entries.sort((a, b) => b.grossProfit - a.grossProfit).map((e, i) => ({ ...e, rank: i + 1 })));
+      setRawData(entries);
     }
     load();
   }, []);
+
+  const data = useMemo(() =>
+    [...rawData].sort((a, b) => b[sortKey] - a[sortKey]).map((e, i) => ({ ...e, rank: i + 1 })),
+    [rawData, sortKey],
+  );
 
   async function toggleExpand(staffId: string) {
     if (expandedId === staffId) {
@@ -97,9 +103,25 @@ export default function RankingTable({ onProjectClick }: RankingTableProps) {
 
   return (
     <div className="rounded-2xl bg-card border border-border overflow-hidden">
-      <div className="p-6 pb-4 flex items-center gap-3">
-        <Trophy className="w-5 h-5 text-accent" />
-        <h2 className="text-lg font-bold text-foreground">担当者別 粗利ランキング</h2>
+      <div className="p-6 pb-4 flex items-center justify-between gap-3 flex-wrap">
+        <div className="flex items-center gap-3">
+          <Trophy className="w-5 h-5 text-accent" />
+          <h2 className="text-lg font-bold text-foreground">担当者別ランキング</h2>
+        </div>
+        <div className="inline-flex rounded-lg border border-border overflow-hidden text-xs font-medium">
+          {([["grossProfit", "粗利"], ["totalContract", "契約金額"], ["projects", "案件数"]] as const).map(([key, label]) => (
+            <button
+              key={key}
+              onClick={() => setSortKey(key)}
+              className={cn(
+                "px-3 py-1.5 transition-colors",
+                sortKey === key ? "bg-primary text-primary-foreground" : "bg-card text-muted-foreground hover:text-foreground"
+              )}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
       </div>
       <div className="overflow-x-auto">
         <table className="w-full min-w-[700px]">
