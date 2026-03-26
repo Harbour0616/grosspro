@@ -1,16 +1,7 @@
 import { useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { Upload, FileSpreadsheet, Check, AlertCircle } from "lucide-react";
-import * as XLSX from "xlsx";
-
-interface ParsedRow {
-  projectName: string;
-  customerName: string;
-  contractAmount: number;
-  fiscalYear: number;
-  fiscalMonth: number;
-  costs: { itemName: string; vendorName: string; amount: number }[];
-}
+import { parseExcelFile, type ParsedRow } from "@/lib/importExcel";
 
 export default function ExcelImport() {
   const [rows, setRows] = useState<ParsedRow[]>([]);
@@ -19,60 +10,19 @@ export default function ExcelImport() {
   const [result, setResult] = useState<{ ok: number; fail: number } | null>(null);
   const [error, setError] = useState("");
 
-  function parseExcel(file: File) {
+  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setFileName(file.name);
+    setRows([]);
     setError("");
     setResult(null);
+
     const reader = new FileReader();
-    reader.onload = (e) => {
+    reader.onload = (ev) => {
       try {
-        const data = new Uint8Array(e.target?.result as ArrayBuffer);
-        const wb = XLSX.read(data, { type: "array" });
-        const parsed: ParsedRow[] = [];
-
-        for (const sheetName of wb.SheetNames) {
-          const ws = wb.Sheets[sheetName];
-          const json: (string | number | null)[][] = XLSX.utils.sheet_to_json(ws, { header: 1 });
-          if (json.length < 5) continue;
-
-          // Row indexes (0-based): row 3 = project name, row 4 = customer, row 8 col 6 = contract amount
-          const projectName = String(json[3]?.[0] ?? "").trim();
-          if (!projectName) continue;
-          const customerName = String(json[4]?.[0] ?? "").trim();
-          const contractAmount = Number(json[8]?.[6] ?? 0);
-
-          // Reiwa year from sheet name: e.g. "R7" → 2025
-          const reiwaMatch = sheetName.match(/R(\d+)/i);
-          let baseYear = new Date().getFullYear();
-          if (reiwaMatch) {
-            baseYear = 2018 + Number(reiwaMatch[1]);
-          }
-
-          // Parse month from sheet name
-          const monthMatch = sheetName.match(/(\d{1,2})月/);
-          let fiscalMonth = 1;
-          if (monthMatch) {
-            fiscalMonth = Number(monthMatch[1]);
-          }
-
-          // Fiscal year (5月始まり): 5-12月 → baseYear-1, 1-4月 → baseYear
-          const fiscalYear = fiscalMonth >= 5 ? baseYear - 1 : baseYear;
-
-          // Costs: rows 10+ typically have item name (col 0), vendor (col 1), amount (col 5)
-          const costs: { itemName: string; vendorName: string; amount: number }[] = [];
-          for (let i = 10; i < json.length; i++) {
-            const row = json[i];
-            if (!row) continue;
-            const itemName = String(row[0] ?? "").trim();
-            const vendorName = String(row[1] ?? "").trim();
-            const amount = Number(row[5] ?? 0);
-            if (itemName && amount > 0) {
-              costs.push({ itemName, vendorName, amount });
-            }
-          }
-
-          parsed.push({ projectName, customerName, contractAmount, fiscalYear, fiscalMonth, costs });
-        }
-
+        const data = new Uint8Array(ev.target?.result as ArrayBuffer);
+        const parsed = parseExcelFile(data);
         if (parsed.length === 0) {
           setError("有効なデータが見つかりませんでした");
           return;
@@ -83,14 +33,6 @@ export default function ExcelImport() {
       }
     };
     reader.readAsArrayBuffer(file);
-  }
-
-  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setFileName(file.name);
-    setRows([]);
-    parseExcel(file);
   }
 
   async function handleImport() {
@@ -118,6 +60,7 @@ export default function ExcelImport() {
           item_name: cost.itemName,
           vendor_name: cost.vendorName,
           amount: cost.amount,
+          payment_month: cost.paymentMonth,
         });
         if (cErr) fail++;
       }
@@ -134,7 +77,6 @@ export default function ExcelImport() {
     <div className="space-y-6">
       <h2 className="text-xl font-bold text-foreground">Excelインポート</h2>
 
-      {/* Upload area */}
       <label className="flex flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed border-border bg-card p-12 cursor-pointer hover:border-primary/50 transition-colors">
         <Upload className="w-10 h-10 text-muted-foreground" />
         <span className="text-sm text-muted-foreground">
@@ -164,7 +106,6 @@ export default function ExcelImport() {
         </div>
       )}
 
-      {/* Preview table */}
       {rows.length > 0 && (
         <div className="rounded-2xl bg-card border border-border overflow-hidden">
           <div className="p-6 pb-4 flex items-center gap-3">

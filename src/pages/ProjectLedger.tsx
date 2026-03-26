@@ -9,6 +9,7 @@ interface CostRow {
   item_name: string | null;
   amount: number | null;
   memo: string | null;
+  payment_month: string | null;
 }
 
 interface ProjectData {
@@ -51,7 +52,7 @@ export default function ProjectLedger({ projectId, projectName, onBack }: Projec
 
       const { data: c } = await supabase
         .from("project_costs")
-        .select("id, vendor_name, item_name, amount, memo")
+        .select("id, vendor_name, item_name, amount, memo, payment_month")
         .eq("project_id", projectId)
         .order("id");
       if (c) setCosts(c);
@@ -157,6 +158,7 @@ export default function ProjectLedger({ projectId, projectName, onBack }: Projec
               <tr className="border-t border-border bg-kpi-surface/50">
                 <th className="text-left text-xs font-medium text-muted-foreground px-6 py-3">業者名</th>
                 <th className="text-left text-xs font-medium text-muted-foreground px-6 py-3">工種</th>
+                <th className="text-left text-xs font-medium text-muted-foreground px-6 py-3">支払月</th>
                 <th className="text-right text-xs font-medium text-muted-foreground px-6 py-3 w-40">金額</th>
                 <th className="text-left text-xs font-medium text-muted-foreground px-6 py-3">メモ</th>
               </tr>
@@ -166,20 +168,21 @@ export default function ProjectLedger({ projectId, projectName, onBack }: Projec
                 <tr key={c.id} className="border-t border-border hover:bg-kpi-surface/30 transition-colors">
                   <td className="px-6 py-3 text-foreground">{c.vendor_name ?? "-"}</td>
                   <td className="px-6 py-3 text-foreground">{c.item_name ?? "-"}</td>
+                  <td className="px-6 py-3 text-foreground">{c.payment_month ?? "-"}</td>
                   <td className="px-6 py-3 text-right font-medium text-foreground">{fmtYen(c.amount ?? 0)}</td>
                   <td className="px-6 py-3 text-muted-foreground">{c.memo ?? ""}</td>
                 </tr>
               ))}
               {costs.length === 0 && (
                 <tr>
-                  <td colSpan={4} className="px-6 py-12 text-center text-muted-foreground">
+                  <td colSpan={5} className="px-6 py-12 text-center text-muted-foreground">
                     原価データがありません
                   </td>
                 </tr>
               )}
               {costs.length > 0 && (
                 <tr className="border-t-2 border-border bg-kpi-surface font-bold">
-                  <td className="px-6 py-3 text-foreground" colSpan={2}>合計</td>
+                  <td className="px-6 py-3 text-foreground" colSpan={3}>合計</td>
                   <td className="px-6 py-3 text-right text-foreground">{fmtYen(totalCost)}</td>
                   <td className="px-6 py-3" />
                 </tr>
