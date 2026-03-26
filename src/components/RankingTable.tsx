@@ -178,9 +178,16 @@ export default function RankingTable({ onProjectClick }: RankingTableProps) {
                       {isOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
                     </td>
                   </tr>
-                  {isOpen && (
-                    <tr key={`${entry.staffId}-detail`}>
-                      <td colSpan={8} className="p-0">
+                  <tr key={`${entry.staffId}-detail`}>
+                    <td colSpan={8} className="p-0">
+                      <div
+                        className="overflow-hidden"
+                        style={{
+                          maxHeight: isOpen ? 2000 : 0,
+                          opacity: isOpen ? 1 : 0,
+                          transition: "max-height 0.3s ease-in-out, opacity 0.2s ease-in-out",
+                        }}
+                      >
                         <div className="bg-kpi-surface/40 px-6 py-4">
                           {details.length === 0 ? (
                             <p className="text-sm text-muted-foreground py-2">担当工事がありません</p>
@@ -226,9 +233,9 @@ export default function RankingTable({ onProjectClick }: RankingTableProps) {
                             </table>
                           )}
                         </div>
-                      </td>
-                    </tr>
-                  )}
+                      </div>
+                    </td>
+                  </tr>
                 </>
               );
             })}
