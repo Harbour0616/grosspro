@@ -3,18 +3,6 @@ import { supabase } from "@/lib/supabase";
 import { Upload, FileSpreadsheet, Check, AlertCircle, RefreshCw, PlusCircle } from "lucide-react";
 import * as XLSX from "xlsx";
 
-const COL_MONTH: Record<number, string> = {
-  6: "2024年10月",
-  7: "2024年11月",
-  8: "2024年12月",
-  9: "2025年1月",
-  10: "2025年2月",
-  11: "2025年3月",
-  12: "2025年4月",
-  13: "2025年5月",
-  14: "2025年6月",
-};
-
 interface CostEntry {
   vendorName: string;
   itemName: string;
@@ -23,6 +11,7 @@ interface CostEntry {
 }
 
 interface ParsedData {
+  projectNumber: string;
   projectName: string;
   customerName: string;
   salesAmount: number;
@@ -30,85 +19,125 @@ interface ParsedData {
   existingProjectId: string | null;
 }
 
+const currentYear = new Date().getFullYear();
+const YEARS = Array.from({ length: 8 }, (_, i) => 2023 + i);
+const MONTHS = Array.from({ length: 12 }, (_, i) => i + 1);
+
 export default function ExcelImport() {
-  const [parsed, setParsed] = useState<ParsedData | null>(null);
+  const [startYear, setStartYear] = useState(currentYear);
+  const [startMonth, setStartMonth] = useState(10);
+  const [fileBuffer, setFileBuffer] = useState<Uint8Array | null>(null);
   const [fileName, setFileName] = useState("");
+  const [parsed, setParsed] = useState<ParsedData | null>(null);
   const [importing, setImporting] = useState(false);
   const [done, setDone] = useState(false);
   const [error, setError] = useState("");
 
-  async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+  function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
     setFileName(file.name);
     setParsed(null);
+    setDone(false);
+    setError("");
+
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const buf = new Uint8Array(ev.target?.result as ArrayBuffer);
+      setFileBuffer(buf);
+      parseBuf(buf, startYear, startMonth);
+    };
+    reader.readAsArrayBuffer(file);
+  }
+
+  function handleStartChange(year: number, month: number) {
+    setStartYear(year);
+    setStartMonth(month);
+    if (fileBuffer) parseBuf(fileBuffer, year, month);
+  }
+
+  async function parseBuf(buf: Uint8Array, year: number, _month: number) {
+    setParsed(null);
     setError("");
     setDone(false);
 
-    const reader = new FileReader();
-    reader.onload = async (ev) => {
-      try {
-        const data = new Uint8Array(ev.target?.result as ArrayBuffer);
-        const wb = XLSX.read(data, { type: "array" });
-        const ws = wb.Sheets[wb.SheetNames[0]];
-        if (!ws) { setError("シートが見つかりません"); return; }
+    try {
+      const wb = XLSX.read(buf, { type: "array" });
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      if (!ws) { setError("シートが見つかりません"); return; }
 
-        const rows: (string | number | null)[][] = XLSX.utils.sheet_to_json(ws, { header: 1 });
+      const rows: (string | number | null)[][] = XLSX.utils.sheet_to_json(ws, { header: 1 });
 
-        const projectName = String(rows[3]?.[3] ?? "").trim();   // D4
-        const customerName = String(rows[4]?.[3] ?? "").trim();  // D5
-        const salesAmount = Number(rows[8]?.[6] ?? 0);           // G9
+      const projectNumber = String(rows[1]?.[12] ?? "").trim(); // M2
+      const projectName = String(rows[3]?.[3] ?? "").trim();     // D4
+      const customerName = String(rows[4]?.[3] ?? "").trim();    // D5
+      const salesAmount = Number(rows[8]?.[6] ?? 0);             // G9
 
-        if (!projectName) {
-          setError("工事名（D4セル）が空です");
-          return;
-        }
-
-        // Detail rows: 22–51 (0-indexed: 21–50)
-        const costs: CostEntry[] = [];
-        for (let i = 21; i <= 50; i++) {
-          const row = rows[i];
-          if (!row) continue;
-
-          const vendorName = String(row[0] ?? "").trim();
-          const itemName = String(row[3] ?? "").trim();
-
-          if (!vendorName && !itemName) continue;
-          if (vendorName.includes("合計") || itemName.includes("合計")) continue;
-
-          for (const [colStr, paymentMonth] of Object.entries(COL_MONTH)) {
-            const col = Number(colStr);
-            const amount = Number(row[col] ?? 0);
-            if (amount > 0) {
-              costs.push({ vendorName, itemName, amount, paymentMonth });
-            }
-          }
-        }
-
-        if (costs.length === 0) {
-          setError("有効な明細データが見つかりませんでした");
-          return;
-        }
-
-        // Check existing project
-        const { data: existing } = await supabase
-          .from("projects")
-          .select("id")
-          .eq("name", projectName)
-          .maybeSingle();
-
-        setParsed({
-          projectName,
-          customerName,
-          salesAmount,
-          costs,
-          existingProjectId: existing?.id ?? null,
-        });
-      } catch {
-        setError("ファイルの解析に失敗しました");
+      if (!projectNumber) {
+        setError("物件番号が入力されていません。Excelの物件番号欄を入力してからアップロードしてください。");
+        return;
       }
-    };
-    reader.readAsArrayBuffer(file);
+      if (!projectName) {
+        setError("工事名（D4セル）が空です");
+        return;
+      }
+
+      // Row 21 (0-indexed: 20) month headers → build "YYYY年M月" labels
+      const headerRow = rows[20] ?? [];
+      const colMonth: Record<number, string> = {};
+      let yr = year;
+      let prevMo = 0;
+      for (let col = 6; col <= 14; col++) {
+        const raw = String(headerRow[col] ?? "").trim();
+        const m = raw.match(/(\d{1,2})月?/);
+        if (!m) continue;
+        const mo = Number(m[1]);
+        if (col === 6) { yr = year; }
+        else if (mo <= prevMo) { yr++; }
+        prevMo = mo;
+        colMonth[col] = `${yr}年${mo}月`;
+      }
+
+      if (Object.keys(colMonth).length === 0) {
+        setError("月ヘッダー（行21）が読み取れませんでした");
+        return;
+      }
+
+      // Detail rows 22–51 (0-indexed 21–50)
+      const costs: CostEntry[] = [];
+      for (let i = 21; i <= 50; i++) {
+        const row = rows[i];
+        if (!row) continue;
+        const vendorName = String(row[0] ?? "").trim();
+        const itemName = String(row[3] ?? "").trim();
+        if (!vendorName && !itemName) continue;
+        if (vendorName.includes("合計") || itemName.includes("合計")) continue;
+
+        for (const [colStr, paymentMonth] of Object.entries(colMonth)) {
+          const amt = Number(row[Number(colStr)] ?? 0);
+          if (amt > 0) costs.push({ vendorName, itemName, amount: amt, paymentMonth });
+        }
+      }
+
+      if (costs.length === 0) {
+        setError("有効な明細データが見つかりませんでした");
+        return;
+      }
+
+      // Check existing by project_number
+      const { data: existing } = await supabase
+        .from("projects")
+        .select("id")
+        .eq("project_number", projectNumber)
+        .maybeSingle();
+
+      setParsed({
+        projectNumber, projectName, customerName, salesAmount, costs,
+        existingProjectId: existing?.id ?? null,
+      });
+    } catch {
+      setError("ファイルの解析に失敗しました");
+    }
   }
 
   async function handleImport() {
@@ -119,54 +148,27 @@ export default function ExcelImport() {
     let projectId: string;
 
     if (parsed.existingProjectId) {
-      // --- Overwrite existing ---
       projectId = parsed.existingProjectId;
+      const { error: delErr } = await supabase.from("project_costs").delete().eq("project_id", projectId);
+      if (delErr) { setError("既存原価の削除に失敗: " + delErr.message); setImporting(false); return; }
 
-      // Delete old costs
-      const { error: delErr } = await supabase
-        .from("project_costs")
-        .delete()
-        .eq("project_id", projectId);
-      if (delErr) {
-        setError("既存原価の削除に失敗しました: " + delErr.message);
-        setImporting(false);
-        return;
-      }
-
-      // Update project
-      const { error: upErr } = await supabase
-        .from("projects")
-        .update({
-          customer_name: parsed.customerName || null,
-          sales_amount: parsed.salesAmount || null,
-        })
-        .eq("id", projectId);
-      if (upErr) {
-        setError("工事の更新に失敗しました: " + upErr.message);
-        setImporting(false);
-        return;
-      }
+      const { error: upErr } = await supabase.from("projects").update({
+        name: parsed.projectName,
+        customer_name: parsed.customerName || null,
+        sales_amount: parsed.salesAmount || null,
+      }).eq("id", projectId);
+      if (upErr) { setError("工事更新に失敗: " + upErr.message); setImporting(false); return; }
     } else {
-      // --- Insert new ---
-      const { data: project, error: pErr } = await supabase
-        .from("projects")
-        .insert({
-          name: parsed.projectName,
-          customer_name: parsed.customerName || null,
-          sales_amount: parsed.salesAmount || null,
-        })
-        .select("id")
-        .single();
-
-      if (pErr || !project) {
-        setError("工事登録に失敗しました: " + (pErr?.message ?? ""));
-        setImporting(false);
-        return;
-      }
+      const { data: project, error: pErr } = await supabase.from("projects").insert({
+        project_number: parsed.projectNumber,
+        name: parsed.projectName,
+        customer_name: parsed.customerName || null,
+        sales_amount: parsed.salesAmount || null,
+      }).select("id").single();
+      if (pErr || !project) { setError("工事登録に失敗: " + (pErr?.message ?? "")); setImporting(false); return; }
       projectId = project.id;
     }
 
-    // Insert costs
     const costRows = parsed.costs.map((c) => ({
       project_id: projectId,
       category: "外注費",
@@ -177,11 +179,7 @@ export default function ExcelImport() {
     }));
 
     const { error: cErr } = await supabase.from("project_costs").insert(costRows);
-    if (cErr) {
-      setError("原価データ登録に失敗しました: " + cErr.message);
-      setImporting(false);
-      return;
-    }
+    if (cErr) { setError("原価登録に失敗: " + cErr.message); setImporting(false); return; }
 
     setImporting(false);
     setDone(true);
@@ -194,24 +192,40 @@ export default function ExcelImport() {
     <div className="space-y-6">
       <h2 className="text-xl font-bold text-foreground">Excelインポート</h2>
 
+      {/* Start year/month */}
+      <div className="rounded-2xl bg-card border border-border p-6">
+        <label className="text-sm font-medium text-foreground">開始年月</label>
+        <p className="text-xs text-muted-foreground mt-0.5 mb-3">Excelの最初の月列に対応する年月を選択してください</p>
+        <div className="flex items-center gap-2">
+          <select
+            value={startYear}
+            onChange={(e) => handleStartChange(Number(e.target.value), startMonth)}
+            className="px-3 py-2 rounded-lg border border-input bg-background text-foreground text-sm"
+          >
+            {YEARS.map((y) => <option key={y} value={y}>{y}年</option>)}
+          </select>
+          <select
+            value={startMonth}
+            onChange={(e) => handleStartChange(startYear, Number(e.target.value))}
+            className="px-3 py-2 rounded-lg border border-input bg-background text-foreground text-sm"
+          >
+            {MONTHS.map((m) => <option key={m} value={m}>{m}月</option>)}
+          </select>
+        </div>
+      </div>
+
       {/* Upload */}
       <label className="flex flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed border-border bg-card p-12 cursor-pointer hover:border-primary/50 transition-colors">
         <Upload className="w-10 h-10 text-muted-foreground" />
         <span className="text-sm text-muted-foreground">
           {fileName || ".xls / .xlsx ファイルをクリックして選択"}
         </span>
-        <input
-          type="file"
-          accept=".xls,.xlsx"
-          onChange={handleFileChange}
-          className="hidden"
-        />
+        <input type="file" accept=".xls,.xlsx" onChange={handleFileSelect} className="hidden" />
       </label>
 
       {error && (
         <div className="flex items-center gap-2 text-destructive text-sm">
-          <AlertCircle className="w-4 h-4" />
-          {error}
+          <AlertCircle className="w-4 h-4" /> {error}
         </div>
       )}
 
@@ -219,7 +233,7 @@ export default function ExcelImport() {
         <div className="flex items-center gap-2 text-sm rounded-2xl bg-card border border-border p-6">
           <Check className="w-5 h-5 text-primary" />
           <span className="text-foreground font-medium">
-            {isOverwrite ? "上書き更新" : "新規登録"}完了しました（工事: {parsed?.projectName}、明細: {parsed?.costs.length}件）
+            {isOverwrite ? "上書き更新" : "新規登録"}完了（{parsed?.projectNumber} {parsed?.projectName}、明細: {parsed?.costs.length}件）
           </span>
         </div>
       )}
@@ -233,23 +247,24 @@ export default function ExcelImport() {
             </div>
             {isOverwrite ? (
               <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-kpi-amber/10 text-kpi-amber">
-                <RefreshCw className="w-3.5 h-3.5" />
-                上書き更新
+                <RefreshCw className="w-3.5 h-3.5" /> 上書き更新
               </span>
             ) : (
               <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-primary/10 text-primary">
-                <PlusCircle className="w-3.5 h-3.5" />
-                新規登録
+                <PlusCircle className="w-3.5 h-3.5" /> 新規登録
               </span>
             )}
           </div>
 
-          {/* Project info */}
           <div className="border-t border-border">
             <table className="w-full text-sm">
               <tbody>
                 <tr className="border-b border-border">
-                  <td className="px-6 py-3 text-muted-foreground w-32">工事名</td>
+                  <td className="px-6 py-3 text-muted-foreground w-32">物件番号</td>
+                  <td className="px-6 py-3 font-semibold text-foreground">{parsed.projectNumber}</td>
+                </tr>
+                <tr className="border-b border-border">
+                  <td className="px-6 py-3 text-muted-foreground">工事名</td>
                   <td className="px-6 py-3 font-semibold text-foreground">{parsed.projectName}</td>
                 </tr>
                 <tr className="border-b border-border">
@@ -268,7 +283,6 @@ export default function ExcelImport() {
             </table>
           </div>
 
-          {/* Detail preview */}
           <div className="border-t border-border overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
@@ -299,7 +313,6 @@ export default function ExcelImport() {
             </table>
           </div>
 
-          {/* Submit */}
           <div className="p-6 pt-4 border-t border-border">
             <button
               onClick={handleImport}
