@@ -48,8 +48,7 @@ export default function Projects() {
   const [panelOpen, setPanelOpen] = useState(false);
   const [editForm, setEditForm] = useState<EditForm>(emptyEditForm);
 
-  async function load(restoreScroll = false) {
-    const scrollY = restoreScroll ? window.scrollY : 0;
+  async function load() {
     const [{ data: pj }, { data: st }] = await Promise.all([
       supabase.from("projects").select("id, project_number, name, customer_name, staff_id, contract_amount, cost_amount, start_month, end_month"),
       supabase.from("staff").select("id, name"),
@@ -65,12 +64,6 @@ export default function Projects() {
       return { ...p, staff: st.find((s) => s.id === p.staff_id), grossProfit, profitRate };
     });
     setProjects(mapped);
-
-    if (restoreScroll) {
-      requestAnimationFrame(() => {
-        window.scrollTo({ top: scrollY, behavior: "instant" });
-      });
-    }
   }
 
   useEffect(() => { load(); }, []);
@@ -113,7 +106,6 @@ export default function Projects() {
   async function handleEditSave(e: React.FormEvent) {
     e.preventDefault();
     if (!editTarget) return;
-    const scrollY = window.scrollY;
     setSaving(true);
     const { error } = await supabase.from("projects").update({
       name: editForm.name,
@@ -126,31 +118,30 @@ export default function Projects() {
     }).eq("id", editTarget.id);
     setSaving(false);
     if (error) { alert("更新失敗: " + error.message); return; }
+    const contractVal = Number(editForm.contract_amount) || 0;
+    const costVal = Number(editForm.cost_amount) || 0;
+    const updated: Project = {
+      ...editTarget,
+      name: editForm.name,
+      customer_name: editForm.customer_name || null,
+      staff_id: editForm.staff_id || null,
+      staff: staffList.find((s) => s.id === editForm.staff_id),
+      contract_amount: editForm.contract_amount ? Number(editForm.contract_amount) : null,
+      cost_amount: editForm.cost_amount ? Number(editForm.cost_amount) : null,
+      start_month: editForm.start_month || null,
+      end_month: editForm.end_month || null,
+      grossProfit: contractVal - costVal,
+      profitRate: contractVal > 0 ? ((contractVal - costVal) / contractVal) * 100 : 0,
+    };
+    setProjects((prev) => prev.map((p) => (p.id === editTarget.id ? updated : p)));
     closePanel();
-    const [{ data: pj }, { data: st }] = await Promise.all([
-      supabase.from("projects").select("id, project_number, name, customer_name, staff_id, contract_amount, cost_amount, start_month, end_month"),
-      supabase.from("staff").select("id, name"),
-    ]);
-    if (!pj || !st) return;
-    setStaffList(st);
-    const mapped: Project[] = pj.map((p) => {
-      const contract = p.contract_amount ?? 0;
-      const cost = p.cost_amount ?? 0;
-      const grossProfit = contract - cost;
-      const profitRate = contract > 0 ? (grossProfit / contract) * 100 : 0;
-      return { ...p, staff: st.find((s) => s.id === p.staff_id), grossProfit, profitRate };
-    });
-    setProjects(mapped);
-    requestAnimationFrame(() => {
-      window.scrollTo({ top: scrollY, behavior: "instant" });
-    });
   }
 
   async function handleDelete(p: Project) {
     if (!confirm(`「${p.name}」を本当に削除しますか？`)) return;
     const { error } = await supabase.from("projects").delete().eq("id", p.id);
     if (error) { alert("削除失敗: " + error.message); return; }
-    load(true);
+    setProjects((prev) => prev.filter((x) => x.id !== p.id));
   }
 
   function startInlineEdit(p: Project) {
@@ -164,7 +155,14 @@ export default function Projects() {
     await supabase.from("projects").update({ contract_amount: val }).eq("id", projectId);
     setInlineEditId(null);
     setInlineSaving(false);
-    load(true);
+    setProjects((prev) => prev.map((p) => {
+      if (p.id !== projectId) return p;
+      const contract = val ?? 0;
+      const cost = p.cost_amount ?? 0;
+      const grossProfit = contract - cost;
+      const profitRate = contract > 0 ? (grossProfit / contract) * 100 : 0;
+      return { ...p, contract_amount: val, grossProfit, profitRate };
+    }));
   }
 
   const fmt = (n: number) => n.toLocaleString();
