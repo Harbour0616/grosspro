@@ -3,6 +3,9 @@ import { TrendingUp, Percent, Building2, BarChart3 } from "lucide-react";
 import KpiCard from "./components/KpiCard";
 import RankingTable from "./components/RankingTable";
 import Sidebar from "./components/Sidebar";
+import Projects from "./pages/Projects";
+import Staff from "./pages/Staff";
+import ExcelImport from "./pages/ExcelImport";
 
 export default function App() {
   const [page, setPage] = useState("dashboard");
@@ -34,15 +37,9 @@ export default function App() {
               <RankingTable />
             </>
           )}
-          {page === "projects" && (
-            <div className="text-center text-muted-foreground py-16">工事一覧（実装予定）</div>
-          )}
-          {page === "staff" && (
-            <div className="text-center text-muted-foreground py-16">担当者マスタ（実装予定）</div>
-          )}
-          {page === "import" && (
-            <div className="text-center text-muted-foreground py-16">Excelインポート（実装予定）</div>
-          )}
+          {page === "projects" && <Projects />}
+          {page === "staff" && <Staff />}
+          {page === "import" && <ExcelImport />}
         </main>
       </div>
     </div>
