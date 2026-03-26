@@ -7,6 +7,8 @@ interface RankingEntry {
   rank: number;
   staffId: string;
   name: string;
+  totalSales: number;
+  totalCost: number;
   grossProfit: number;
   profitRate: number;
   projects: number;
@@ -25,7 +27,7 @@ interface RankingTableProps {
   onProjectClick?: (projectId: string, projectName: string) => void;
 }
 
-const formatYen = (n: number) => `${n.toLocaleString()}円`;
+const fmt = (n: number) => n.toLocaleString();
 
 const rankColors: Record<number, string> = {
   1: "text-rank-gold",
@@ -54,7 +56,7 @@ export default function RankingTable({ onProjectClick }: RankingTableProps) {
         }, 0);
         const grossProfit = totalSales - totalCost;
         const profitRate = totalSales > 0 ? (grossProfit / totalSales) * 100 : 0;
-        return { staffId: s.id, name: s.name, grossProfit, profitRate, projects: myProjects.length };
+        return { staffId: s.id, name: s.name, totalSales, totalCost, grossProfit, profitRate, projects: myProjects.length };
       });
 
       setData(entries.sort((a, b) => b.grossProfit - a.grossProfit).map((e, i) => ({ ...e, rank: i + 1 })));
@@ -100,6 +102,8 @@ export default function RankingTable({ onProjectClick }: RankingTableProps) {
             <tr className="border-t border-border bg-kpi-surface/50">
               <th className="text-left text-xs font-medium text-muted-foreground px-6 py-3 w-16">順位</th>
               <th className="text-left text-xs font-medium text-muted-foreground px-6 py-3">担当者</th>
+              <th className="text-right text-xs font-medium text-muted-foreground px-6 py-3">売上合計</th>
+              <th className="text-right text-xs font-medium text-muted-foreground px-6 py-3">原価合計</th>
               <th className="text-right text-xs font-medium text-muted-foreground px-6 py-3">粗利額</th>
               <th className="text-right text-xs font-medium text-muted-foreground px-6 py-3">粗利率</th>
               <th className="text-right text-xs font-medium text-muted-foreground px-6 py-3">案件数</th>
@@ -125,7 +129,9 @@ export default function RankingTable({ onProjectClick }: RankingTableProps) {
                       </span>
                     </td>
                     <td className="px-6 py-4 font-semibold text-foreground">{entry.name}</td>
-                    <td className="px-6 py-4 text-right font-semibold text-foreground">{formatYen(entry.grossProfit)}</td>
+                    <td className="px-6 py-4 text-right text-sm text-foreground tabular-nums">{fmt(entry.totalSales)}</td>
+                    <td className="px-6 py-4 text-right text-sm text-foreground tabular-nums">{fmt(entry.totalCost)}</td>
+                    <td className="px-6 py-4 text-right font-semibold text-foreground tabular-nums">{fmt(entry.grossProfit)}</td>
                     <td className="px-6 py-4 text-right">
                       <span className={cn(
                         "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium",
@@ -141,7 +147,7 @@ export default function RankingTable({ onProjectClick }: RankingTableProps) {
                   </tr>
                   {isOpen && (
                     <tr key={`${entry.staffId}-detail`}>
-                      <td colSpan={6} className="p-0">
+                      <td colSpan={8} className="p-0">
                         <div className="bg-kpi-surface/40 px-6 py-4">
                           {loadingDetail ? (
                             <p className="text-sm text-muted-foreground py-2">読み込み中...</p>
@@ -171,9 +177,9 @@ export default function RankingTable({ onProjectClick }: RankingTableProps) {
                                         </button>
                                       ) : d.name}
                                     </td>
-                                    <td className="py-2 text-right text-sm text-foreground">{formatYen(d.salesAmount)}</td>
-                                    <td className="py-2 text-right text-sm text-foreground">{formatYen(d.totalCost)}</td>
-                                    <td className="py-2 text-right text-sm font-semibold text-foreground">{formatYen(d.grossProfit)}</td>
+                                    <td className="py-2 text-right text-sm text-foreground">{fmt(d.salesAmount)}</td>
+                                    <td className="py-2 text-right text-sm text-foreground">{fmt(d.totalCost)}</td>
+                                    <td className="py-2 text-right text-sm font-semibold text-foreground">{fmt(d.grossProfit)}</td>
                                     <td className="py-2 text-right">
                                       <span className={cn(
                                         "inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium",
