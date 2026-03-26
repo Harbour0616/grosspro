@@ -7,13 +7,15 @@ import Projects from "./pages/Projects";
 import Staff from "./pages/Staff";
 import ExcelImport from "./pages/ExcelImport";
 import StaffDetail from "./pages/StaffDetail";
+import ProjectLedger from "./pages/ProjectLedger";
 
 type Page =
   | "dashboard"
   | "projects"
   | "staff"
   | "import"
-  | { name: "staffDetail"; staffId: string; staffName: string };
+  | { name: "staffDetail"; staffId: string; staffName: string }
+  | { name: "ledger"; projectId: string; projectName: string };
 
 export default function App() {
   const [page, setPage] = useState<Page>("dashboard");
@@ -43,7 +45,7 @@ export default function App() {
                 <KpiCard title="案件数" value="44件" subtitle="完了: 38件 / 進行中: 6件" icon={BarChart3} trend={{ value: "8件", positive: true }} />
                 <KpiCard title="平均案件粗利" value="¥345万" subtitle="前年: ¥310万" icon={Building2} trend={{ value: "11.3%", positive: true }} />
               </div>
-              <RankingTable />
+              <RankingTable onProjectClick={(id, name) => setPage({ name: "ledger", projectId: id, projectName: name })} />
             </>
           )}
           {page === "projects" && <Projects />}
@@ -53,6 +55,13 @@ export default function App() {
             <StaffDetail
               staffId={page.staffId}
               staffName={page.staffName}
+              onBack={() => setPage("dashboard")}
+            />
+          )}
+          {typeof page === "object" && page.name === "ledger" && (
+            <ProjectLedger
+              projectId={page.projectId}
+              projectName={page.projectName}
               onBack={() => setPage("dashboard")}
             />
           )}

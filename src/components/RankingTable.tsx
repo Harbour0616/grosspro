@@ -21,6 +21,10 @@ interface ProjectDetail {
   profitRate: number;
 }
 
+interface RankingTableProps {
+  onProjectClick?: (projectId: string, projectName: string) => void;
+}
+
 const formatYen = (n: number) =>
   n >= 100000000
     ? `¥${(n / 100000000).toFixed(2)}億`
@@ -32,7 +36,7 @@ const rankColors: Record<number, string> = {
   3: "text-rank-bronze",
 };
 
-export default function RankingTable() {
+export default function RankingTable({ onProjectClick }: RankingTableProps) {
   const [data, setData] = useState<RankingEntry[]>([]);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [details, setDetails] = useState<ProjectDetail[]>([]);
@@ -160,7 +164,16 @@ export default function RankingTable() {
                               <tbody>
                                 {details.map((d) => (
                                   <tr key={d.id} className="border-t border-border/50">
-                                    <td className="py-2 text-sm text-foreground">{d.name}</td>
+                                    <td className="py-2 text-sm text-foreground">
+                                      {onProjectClick ? (
+                                        <button
+                                          onClick={(e) => { e.stopPropagation(); onProjectClick(d.id, d.name); }}
+                                          className="hover:text-primary hover:underline transition-colors text-left"
+                                        >
+                                          {d.name}
+                                        </button>
+                                      ) : d.name}
+                                    </td>
                                     <td className="py-2 text-right text-sm text-foreground">{formatYen(d.salesAmount)}</td>
                                     <td className="py-2 text-right text-sm text-foreground">{formatYen(d.totalCost)}</td>
                                     <td className="py-2 text-right text-sm font-semibold text-foreground">{formatYen(d.grossProfit)}</td>
