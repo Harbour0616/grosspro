@@ -20,21 +20,31 @@ export default function ExcelImport() {
   const [importing, setImporting] = useState(false);
   const [done, setDone] = useState(false);
   const [error, setError] = useState("");
+  const [dragging, setDragging] = useState(false);
 
-  async function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  function processFile(file: File) {
     setFileName(file.name);
     setParsed(null);
     setDone(false);
     setError("");
-
     const reader = new FileReader();
     reader.onload = async (ev) => {
       const buf = new Uint8Array(ev.target?.result as ArrayBuffer);
       await parseFile(buf);
     };
     reader.readAsArrayBuffer(file);
+  }
+
+  function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (file) processFile(file);
+  }
+
+  function handleDrop(e: React.DragEvent) {
+    e.preventDefault();
+    setDragging(false);
+    const file = e.dataTransfer.files[0];
+    if (file && /\.xlsx?$/i.test(file.name)) processFile(file);
   }
 
   async function parseFile(buf: Uint8Array) {
@@ -106,12 +116,18 @@ export default function ExcelImport() {
     <div className="space-y-6">
       <h2 className="text-xl font-bold text-foreground">Excelインポート</h2>
 
-      {/* Upload */}
-      <label className="flex flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed border-border bg-card p-12 cursor-pointer hover:border-primary/50 transition-colors">
-        <Upload className="w-10 h-10 text-muted-foreground" />
-        <span className="text-sm text-muted-foreground">
-          {fileName || ".xls / .xlsx ファイルをクリックして選択"}
+      {/* Upload / Drop zone */}
+      <label
+        onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
+        onDragLeave={() => setDragging(false)}
+        onDrop={handleDrop}
+        className={`flex flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed bg-card p-16 cursor-pointer transition-colors ${dragging ? "border-primary bg-primary/5" : "border-border hover:border-primary/50"}`}
+      >
+        <Upload className={`w-12 h-12 ${dragging ? "text-primary" : "text-muted-foreground"}`} />
+        <span className="text-sm text-muted-foreground text-center">
+          {fileName || "ファイルをドラッグ&ドロップ、またはクリックして選択"}
         </span>
+        <span className="text-xs text-muted-foreground">.xls / .xlsx</span>
         <input type="file" accept=".xls,.xlsx" onChange={handleFileSelect} className="hidden" />
       </label>
 
