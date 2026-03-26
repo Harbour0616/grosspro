@@ -14,6 +14,7 @@ interface Project {
   customer_name: string | null;
   staff_id: string | null;
   contract_amount: number | null;
+  sales_amount: number | null;
   staff?: Staff;
   totalCost: number;
   grossProfit: number;
@@ -36,12 +37,12 @@ export default function Projects() {
     name: "",
     customer_name: "",
     staff_id: "",
-    contract_amount: "",
+    sales_amount: "",
   });
 
   async function load() {
     const [{ data: pj }, { data: st }, { data: costs }] = await Promise.all([
-      supabase.from("projects").select("id, name, customer_name, staff_id, contract_amount"),
+      supabase.from("projects").select("id, name, customer_name, staff_id, contract_amount, sales_amount"),
       supabase.from("staff").select("id, name"),
       supabase.from("project_costs").select("project_id, amount"),
     ]);
@@ -52,9 +53,9 @@ export default function Projects() {
       const totalCost = (costs ?? [])
         .filter((c) => c.project_id === p.id)
         .reduce((sum, c) => sum + (c.amount ?? 0), 0);
-      const contract = p.contract_amount ?? 0;
-      const grossProfit = contract - totalCost;
-      const profitRate = contract > 0 ? (grossProfit / contract) * 100 : 0;
+      const sales = p.sales_amount ?? 0;
+      const grossProfit = sales - totalCost;
+      const profitRate = sales > 0 ? (grossProfit / sales) * 100 : 0;
       return {
         ...p,
         staff: st.find((s) => s.id === p.staff_id),
@@ -90,7 +91,7 @@ export default function Projects() {
       name: p.name,
       customer_name: p.customer_name ?? "",
       staff_id: p.staff_id ?? "",
-      contract_amount: p.contract_amount != null ? String(p.contract_amount) : "",
+      sales_amount: p.sales_amount != null ? String(p.sales_amount) : "",
     });
   }
 
@@ -102,7 +103,7 @@ export default function Projects() {
       name: editForm.name,
       customer_name: editForm.customer_name || null,
       staff_id: editForm.staff_id || null,
-      contract_amount: editForm.contract_amount ? Number(editForm.contract_amount) : null,
+      sales_amount: editForm.sales_amount ? Number(editForm.sales_amount) : null,
     }).eq("id", editTarget.id);
     setSaving(false);
     if (error) { alert("更新失敗: " + error.message); return; }
@@ -191,6 +192,7 @@ export default function Projects() {
                 <th className="text-left text-xs font-medium text-muted-foreground px-6 py-3">顧客名</th>
                 <th className="text-left text-xs font-medium text-muted-foreground px-6 py-3">担当者</th>
                 <th className="text-right text-xs font-medium text-muted-foreground px-6 py-3">請負金額</th>
+                <th className="text-right text-xs font-medium text-muted-foreground px-6 py-3">売上金額</th>
                 <th className="text-right text-xs font-medium text-muted-foreground px-6 py-3">粗利</th>
                 <th className="text-right text-xs font-medium text-muted-foreground px-6 py-3">粗利率</th>
                 <th className="text-right text-xs font-medium text-muted-foreground px-6 py-3 w-20">操作</th>
@@ -204,6 +206,9 @@ export default function Projects() {
                   <td className="px-6 py-4 text-sm text-foreground">{p.staff?.name ?? "-"}</td>
                   <td className="px-6 py-4 text-right text-sm text-foreground">
                     {p.contract_amount ? formatYen(p.contract_amount) : "-"}
+                  </td>
+                  <td className="px-6 py-4 text-right text-sm text-foreground">
+                    {p.sales_amount ? formatYen(p.sales_amount) : "-"}
                   </td>
                   <td className="px-6 py-4 text-right font-semibold text-foreground">{formatYen(p.grossProfit)}</td>
                   <td className="px-6 py-4 text-right">
@@ -227,7 +232,7 @@ export default function Projects() {
               ))}
               {projects.length === 0 && (
                 <tr>
-                  <td colSpan={7} className="px-6 py-12 text-center text-muted-foreground">
+                  <td colSpan={8} className="px-6 py-12 text-center text-muted-foreground">
                     工事データがありません
                   </td>
                 </tr>
@@ -283,11 +288,11 @@ export default function Projects() {
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-foreground mb-1">請負金額</label>
+                <label className="block text-sm font-medium text-foreground mb-1">売上金額</label>
                 <input
                   type="number"
-                  value={editForm.contract_amount}
-                  onChange={(e) => setEditForm({ ...editForm, contract_amount: e.target.value })}
+                  value={editForm.sales_amount}
+                  onChange={(e) => setEditForm({ ...editForm, sales_amount: e.target.value })}
                   className="w-full px-3 py-2 rounded-lg border border-input bg-background text-foreground text-sm"
                   placeholder="例: 50000000"
                 />
