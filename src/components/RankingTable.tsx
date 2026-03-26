@@ -62,7 +62,6 @@ export default function RankingTable({ onProjectClick }: RankingTableProps) {
   const [sortKey, setSortKey] = useState<SortKey>("grossProfit");
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [details, setDetails] = useState<ProjectDetail[]>([]);
-  const [loadingDetail, setLoadingDetail] = useState(false);
 
   useEffect(() => {
     async function load() {
@@ -94,10 +93,8 @@ export default function RankingTable({ onProjectClick }: RankingTableProps) {
       setExpandedId(null);
       return;
     }
-    setExpandedId(staffId);
-    setLoadingDetail(true);
     const { data: pj } = await supabase.from("projects").select("id, name, contract_amount, cost_amount, end_month").eq("staff_id", staffId);
-    if (!pj) { setLoadingDetail(false); return; }
+    if (!pj) return;
 
     const rows: ProjectDetail[] = pj.map((p) => {
       const contract = p.contract_amount ?? 0;
@@ -107,7 +104,7 @@ export default function RankingTable({ onProjectClick }: RankingTableProps) {
       return { id: p.id, name: p.name, contractAmount: contract, costAmount: cost, grossProfit, profitRate, endMonth: p.end_month ?? null };
     });
     setDetails(rows);
-    setLoadingDetail(false);
+    setExpandedId(staffId);
   }
 
   return (
@@ -185,17 +182,7 @@ export default function RankingTable({ onProjectClick }: RankingTableProps) {
                     <tr key={`${entry.staffId}-detail`}>
                       <td colSpan={8} className="p-0">
                         <div className="bg-kpi-surface/40 px-6 py-4">
-                          {loadingDetail ? (
-                            <div className="h-1 rounded-full overflow-hidden" style={{ background: "hsl(var(--border))" }}>
-                              <div
-                                className="h-full w-1/2 rounded-full"
-                                style={{
-                                  background: "linear-gradient(90deg, transparent, hsl(152 40% 22%), hsl(152 45% 35%), transparent)",
-                                  animation: "glow-slide 1s linear infinite",
-                                }}
-                              />
-                            </div>
-                          ) : details.length === 0 ? (
+                          {details.length === 0 ? (
                             <p className="text-sm text-muted-foreground py-2">担当工事がありません</p>
                           ) : (
                             <table className="w-full">
