@@ -116,7 +116,7 @@ export default function Projects() {
     load();
   }
 
-  const formatYen = (n: number) => `${n.toLocaleString()}円`;
+  const fmt = (n: number) => n.toLocaleString();
 
   return (
     <div className="space-y-6">
@@ -194,6 +194,7 @@ export default function Projects() {
                 <th className="text-left text-xs font-medium text-muted-foreground px-6 py-3">顧客名</th>
                 <th className="text-left text-xs font-medium text-muted-foreground px-6 py-3">担当者</th>
                 <th className="text-right text-xs font-medium text-muted-foreground px-6 py-3">請負金額</th>
+                <th className="text-right text-xs font-medium text-muted-foreground px-6 py-3">原価合計</th>
                 <th className="text-right text-xs font-medium text-muted-foreground px-6 py-3">粗利</th>
                 <th className="text-right text-xs font-medium text-muted-foreground px-6 py-3">粗利率</th>
                 <th className="text-right text-xs font-medium text-muted-foreground px-6 py-3 w-20">操作</th>
@@ -205,17 +206,22 @@ export default function Projects() {
                   <td className="px-6 py-4 font-semibold text-foreground">{p.name}</td>
                   <td className="px-6 py-4 text-sm text-muted-foreground">{p.customer_name ?? "-"}</td>
                   <td className="px-6 py-4 text-sm text-foreground">{p.staff?.name ?? "-"}</td>
-                  <td className="px-6 py-4 text-right text-sm text-foreground">
-                    {p.contract_amount ? formatYen(p.contract_amount) : "-"}
+                  <td className="px-6 py-4 text-right text-sm text-foreground tabular-nums">
+                    {p.contract_amount ? fmt(p.contract_amount) : "-"}
                   </td>
-                  <td className="px-6 py-4 text-right font-semibold text-foreground">{formatYen(p.grossProfit)}</td>
+                  <td className="px-6 py-4 text-right text-sm text-foreground tabular-nums">{fmt(p.totalCost)}</td>
+                  <td className="px-6 py-4 text-right font-semibold text-foreground tabular-nums">
+                    {(p.sales_amount ?? 0) > 0 ? fmt(p.grossProfit) : "-"}
+                  </td>
                   <td className="px-6 py-4 text-right">
-                    <span className={cn(
-                      "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium",
-                      p.profitRate >= 25 ? "bg-primary/10 text-primary" : "bg-kpi-amber/10 text-kpi-amber"
-                    )}>
-                      {p.profitRate.toFixed(1)}%
-                    </span>
+                    {(p.sales_amount ?? 0) > 0 ? (
+                      <span className={cn(
+                        "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium",
+                        p.profitRate >= 25 ? "bg-primary/10 text-primary" : "bg-kpi-amber/10 text-kpi-amber"
+                      )}>
+                        {p.profitRate.toFixed(1)}%
+                      </span>
+                    ) : "-"}
                   </td>
                   <td className="px-6 py-4 text-right">
                     <div className="inline-flex gap-1">
@@ -239,7 +245,7 @@ export default function Projects() {
               ))}
               {projects.length === 0 && (
                 <tr>
-                  <td colSpan={7} className="px-6 py-12 text-center text-muted-foreground">
+                  <td colSpan={8} className="px-6 py-12 text-center text-muted-foreground">
                     工事データがありません
                   </td>
                 </tr>
