@@ -162,11 +162,11 @@ export default function Projects() {
                 <th className="text-left text-xs font-medium text-muted-foreground px-4 md:px-6 py-3 min-w-[90px]">物件番号</th>
                 <th className="text-left text-xs font-medium text-muted-foreground px-4 md:px-6 py-3 min-w-[120px]">工事名</th>
                 <th className="text-left text-xs font-medium text-muted-foreground px-4 md:px-6 py-3 min-w-[80px]">顧客名</th>
+                <th className="text-left text-xs font-medium text-muted-foreground px-4 md:px-6 py-3 min-w-[70px]">担当者</th>
                 <th className="text-right text-xs font-medium text-muted-foreground px-4 md:px-6 py-3 min-w-[90px]">契約金額</th>
                 <th className="text-right text-xs font-medium text-muted-foreground px-4 md:px-6 py-3 min-w-[90px]">現場経費</th>
                 <th className="text-right text-xs font-medium text-muted-foreground px-4 md:px-6 py-3 min-w-[90px]">粗利</th>
                 <th className="text-right text-xs font-medium text-muted-foreground px-4 md:px-6 py-3 min-w-[70px]">粗利率</th>
-                <th className="text-left text-xs font-medium text-muted-foreground px-4 md:px-6 py-3 min-w-[90px]">担当者</th>
                 <th className="text-right text-xs font-medium text-muted-foreground px-4 md:px-6 py-3 w-20">操作</th>
               </tr>
             </thead>
@@ -176,6 +176,7 @@ export default function Projects() {
                   <td className="px-4 md:px-6 py-4 text-sm text-foreground">{p.project_number ?? "-"}</td>
                   <td className="px-4 md:px-6 py-4 font-semibold text-foreground">{p.name}</td>
                   <td className="px-4 md:px-6 py-4 text-sm text-muted-foreground">{p.customer_name ?? "-"}</td>
+                  <td className="px-4 md:px-6 py-4 text-sm text-foreground">{p.staff?.name ?? "-"}</td>
                   <td className="px-4 md:px-6 py-1 text-right text-sm text-foreground tabular-nums">
                     {inlineEditId === p.id ? (
                       inlineSaving ? (
@@ -211,7 +212,6 @@ export default function Projects() {
                       </span>
                     ) : "-"}
                   </td>
-                  <td className="px-4 md:px-6 py-4 text-sm text-foreground">{p.staff?.name ?? "-"}</td>
                   <td className="px-4 md:px-6 py-4 text-right">
                     <div className="inline-flex gap-1">
                       <button onClick={() => openEdit(p)} className="p-2.5 rounded-lg hover:bg-primary/10 text-muted-foreground hover:text-primary transition-colors" title="編集">
