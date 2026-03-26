@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { TrendingUp, Percent, Building2, BarChart3, Menu } from "lucide-react";
+import { supabase } from "@/lib/supabase";
 import KpiCard from "./components/KpiCard";
 import RankingTable from "./components/RankingTable";
 import Sidebar from "./components/Sidebar";
@@ -17,10 +18,40 @@ type Page =
   | { name: "staffDetail"; staffId: string; staffName: string }
   | { name: "ledger"; projectId: string; projectName: string };
 
+interface Kpi {
+  grossTotal: string;
+  avgRate: string;
+  count: string;
+  avgProfit: string;
+}
+
+const fmtMan = (n: number) => `${Math.floor(n / 10000).toLocaleString()}万`;
+
 export default function App() {
   const [page, setPage] = useState<Page>("dashboard");
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [kpi, setKpi] = useState<Kpi | null>(null);
   const activeSidebar = typeof page === "string" ? page : "dashboard";
+
+  useEffect(() => {
+    async function loadKpi() {
+      const { data } = await supabase.from("projects").select("contract_amount, cost_amount");
+      if (!data) return;
+      const active = data.filter((p) => (p.contract_amount ?? 0) > 0);
+      const totalContract = active.reduce((s, p) => s + (p.contract_amount ?? 0), 0);
+      const totalCost = active.reduce((s, p) => s + (p.cost_amount ?? 0), 0);
+      const gross = totalContract - totalCost;
+      const rate = totalContract > 0 ? (gross / totalContract) * 100 : 0;
+      const count = active.length;
+      setKpi({
+        grossTotal: fmtMan(gross),
+        avgRate: `${rate.toFixed(1)}%`,
+        count: `${count}件`,
+        avgProfit: count > 0 ? fmtMan(gross / count) : "0万",
+      });
+    }
+    loadKpi();
+  }, [page]);
 
   return (
     <div className="flex min-h-screen bg-background">
@@ -47,10 +78,10 @@ export default function App() {
           {page === "dashboard" && (
             <>
               <div className="hidden md:grid grid-cols-2 lg:grid-cols-4 gap-4">
-                <KpiCard title="粗利合計" value="152,000,000円" subtitle="前年同期比" icon={TrendingUp} trend={{ value: "12.3%", positive: true }} />
-                <KpiCard title="平均粗利率" value="25.0%" subtitle="目標: 23.0%" icon={Percent} trend={{ value: "2.0pt", positive: true }} />
-                <KpiCard title="案件数" value="44件" subtitle="完了: 38件 / 進行中: 6件" icon={BarChart3} trend={{ value: "8件", positive: true }} />
-                <KpiCard title="平均案件粗利" value="3,450,000円" subtitle="前年: 3,100,000円" icon={Building2} trend={{ value: "11.3%", positive: true }} />
+                <KpiCard title="粗利合計" value={kpi?.grossTotal ?? "---"} icon={TrendingUp} />
+                <KpiCard title="平均粗利率" value={kpi?.avgRate ?? "---"} icon={Percent} />
+                <KpiCard title="案件数" value={kpi?.count ?? "---"} icon={BarChart3} />
+                <KpiCard title="平均案件粗利" value={kpi?.avgProfit ?? "---"} icon={Building2} />
               </div>
               <RankingTable onProjectClick={(id, name) => setPage({ name: "ledger", projectId: id, projectName: name })} />
             </>
