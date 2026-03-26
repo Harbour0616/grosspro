@@ -153,16 +153,16 @@ export default function ProjectLedger({ projectId, projectName, onBack }: Projec
         <div className="p-6 pb-4">
           <h3 className="text-base font-bold text-foreground">原価明細</h3>
         </div>
-        <div className="overflow-x-auto">
+        <div className="overflow-auto max-h-[60vh]">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-t border-border bg-kpi-surface">
-                <th className="text-left text-xs font-medium text-muted-foreground px-4 py-3 whitespace-nowrap sticky left-0 bg-kpi-surface z-20 min-w-[120px]">業者名</th>
-                <th className="text-left text-xs font-medium text-muted-foreground px-4 py-3 whitespace-nowrap sticky left-[120px] bg-kpi-surface z-20 min-w-[120px]">工種</th>
+                <th className="text-left text-xs font-medium text-muted-foreground px-4 py-3 whitespace-nowrap sticky top-0 left-0 bg-kpi-surface z-30 min-w-[120px]">業者名</th>
+                <th className="text-left text-xs font-medium text-muted-foreground px-4 py-3 whitespace-nowrap sticky top-0 left-[120px] bg-kpi-surface z-30 min-w-[120px]">工種</th>
                 {months.map((m) => (
-                  <th key={m} className="text-right text-xs font-medium text-muted-foreground px-4 py-3 whitespace-nowrap min-w-[100px]">{m}</th>
+                  <th key={m} className="text-right text-xs font-medium text-muted-foreground px-4 py-3 whitespace-nowrap sticky top-0 bg-kpi-surface z-10 min-w-[100px]">{m}</th>
                 ))}
-                <th className="text-right text-xs font-medium text-muted-foreground px-4 py-3 whitespace-nowrap font-bold min-w-[110px]">合計</th>
+                <th className="text-right text-xs font-medium text-muted-foreground px-4 py-3 whitespace-nowrap font-bold sticky top-0 bg-kpi-surface z-10 min-w-[110px]">合計</th>
               </tr>
             </thead>
             <tbody>
