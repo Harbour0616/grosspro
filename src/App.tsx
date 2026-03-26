@@ -46,7 +46,7 @@ export default function App() {
         <main className="max-w-full mx-auto px-4 py-6 md:py-8 space-y-6 md:space-y-8">
           {page === "dashboard" && (
             <>
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
+              <div className="hidden md:grid grid-cols-2 lg:grid-cols-4 gap-4">
                 <KpiCard title="粗利合計" value="152,000,000円" subtitle="前年同期比" icon={TrendingUp} trend={{ value: "12.3%", positive: true }} />
                 <KpiCard title="平均粗利率" value="25.0%" subtitle="目標: 23.0%" icon={Percent} trend={{ value: "2.0pt", positive: true }} />
                 <KpiCard title="案件数" value="44件" subtitle="完了: 38件 / 進行中: 6件" icon={BarChart3} trend={{ value: "8件", positive: true }} />

@@ -1,7 +1,17 @@
 import { cn } from "@/lib/utils";
 import { Trophy, ChevronDown, ChevronUp } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
 import { supabase } from "@/lib/supabase";
+
+function useIsMobile(breakpoint = 768) {
+  const subscribe = useCallback((cb: () => void) => {
+    const mq = window.matchMedia(`(max-width: ${breakpoint - 1}px)`);
+    mq.addEventListener("change", cb);
+    return () => mq.removeEventListener("change", cb);
+  }, [breakpoint]);
+  const getSnapshot = useCallback(() => window.innerWidth < breakpoint, [breakpoint]);
+  return useSyncExternalStore(subscribe, getSnapshot, () => false);
+}
 
 interface RankingEntry {
   rank: number;
@@ -27,7 +37,8 @@ interface RankingTableProps {
   onProjectClick?: (projectId: string, projectName: string) => void;
 }
 
-const fmt = (n: number) => n.toLocaleString();
+const fmtFull = (n: number) => n.toLocaleString();
+const fmtMan = (n: number) => `${Math.floor(n / 10000)}万`;
 
 const rankColors: Record<number, string> = {
   1: "text-rank-gold",
@@ -36,6 +47,8 @@ const rankColors: Record<number, string> = {
 };
 
 export default function RankingTable({ onProjectClick }: RankingTableProps) {
+  const isMobile = useIsMobile();
+  const fmt = isMobile ? fmtMan : fmtFull;
   const [data, setData] = useState<RankingEntry[]>([]);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [details, setDetails] = useState<ProjectDetail[]>([]);
