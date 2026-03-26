@@ -6,13 +6,22 @@ import Sidebar from "./components/Sidebar";
 import Projects from "./pages/Projects";
 import Staff from "./pages/Staff";
 import ExcelImport from "./pages/ExcelImport";
+import StaffDetail from "./pages/StaffDetail";
+
+type Page =
+  | "dashboard"
+  | "projects"
+  | "staff"
+  | "import"
+  | { name: "staffDetail"; staffId: string; staffName: string };
 
 export default function App() {
-  const [page, setPage] = useState("dashboard");
+  const [page, setPage] = useState<Page>("dashboard");
+  const activeSidebar = typeof page === "string" ? page : "dashboard";
 
   return (
     <div className="flex min-h-screen bg-background">
-      <Sidebar active={page} onNavigate={setPage} />
+      <Sidebar active={activeSidebar} onNavigate={setPage} />
       <div className="flex-1 overflow-auto">
         <header className="border-b border-border bg-card/80 backdrop-blur-sm sticky top-0 z-10">
           <div className="max-w-6xl mx-auto px-6 py-4 flex items-center gap-3">
@@ -34,12 +43,19 @@ export default function App() {
                 <KpiCard title="案件数" value="44件" subtitle="完了: 38件 / 進行中: 6件" icon={BarChart3} trend={{ value: "8件", positive: true }} />
                 <KpiCard title="平均案件粗利" value="¥345万" subtitle="前年: ¥310万" icon={Building2} trend={{ value: "11.3%", positive: true }} />
               </div>
-              <RankingTable />
+              <RankingTable onStaffClick={(id, name) => setPage({ name: "staffDetail", staffId: id, staffName: name })} />
             </>
           )}
           {page === "projects" && <Projects />}
           {page === "staff" && <Staff />}
           {page === "import" && <ExcelImport />}
+          {typeof page === "object" && page.name === "staffDetail" && (
+            <StaffDetail
+              staffId={page.staffId}
+              staffName={page.staffName}
+              onBack={() => setPage("dashboard")}
+            />
+          )}
         </main>
       </div>
     </div>

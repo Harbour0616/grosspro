@@ -5,10 +5,15 @@ import { supabase } from "@/lib/supabase";
 
 interface RankingEntry {
   rank: number;
+  staffId: string;
   name: string;
   grossProfit: number;
   profitRate: number;
   projects: number;
+}
+
+interface RankingTableProps {
+  onStaffClick?: (staffId: string, staffName: string) => void;
 }
 
 const formatYen = (n: number) => `¥${(n / 10000).toFixed(0)}万`;
@@ -19,7 +24,7 @@ const rankColors: Record<number, string> = {
   3: "text-rank-bronze",
 };
 
-export default function RankingTable() {
+export default function RankingTable({ onStaffClick }: RankingTableProps) {
   const [data, setData] = useState<RankingEntry[]>([]);
 
   useEffect(() => {
@@ -37,7 +42,7 @@ export default function RankingTable() {
         }, 0);
         const grossProfit = totalSales - totalCost;
         const profitRate = totalSales > 0 ? (grossProfit / totalSales) * 100 : 0;
-        return { name: s.name, grossProfit, profitRate, projects: myProjects.length };
+        return { staffId: s.id, name: s.name, grossProfit, profitRate, projects: myProjects.length };
       });
 
       setData(entries.sort((a, b) => b.grossProfit - a.grossProfit).map((e, i) => ({ ...e, rank: i + 1 })));
@@ -70,7 +75,16 @@ export default function RankingTable() {
                     {entry.rank}
                   </span>
                 </td>
-                <td className="px-6 py-4 font-semibold text-foreground">{entry.name}</td>
+                <td className="px-6 py-4 font-semibold text-foreground">
+                  {onStaffClick ? (
+                    <button
+                      onClick={() => onStaffClick(entry.staffId, entry.name)}
+                      className="hover:text-primary hover:underline transition-colors text-left"
+                    >
+                      {entry.name}
+                    </button>
+                  ) : entry.name}
+                </td>
                 <td className="px-6 py-4 text-right font-semibold text-foreground">{formatYen(entry.grossProfit)}</td>
                 <td className="px-6 py-4 text-right">
                   <span className={cn(

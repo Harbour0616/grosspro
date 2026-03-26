@@ -10,7 +10,8 @@ const navItems = [
 
 interface SidebarProps {
   active: string;
-  onNavigate: (id: string) => void;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  onNavigate: (id: any) => void;
 }
 
 export default function Sidebar({ active, onNavigate }: SidebarProps) {
