@@ -131,8 +131,8 @@ export default function RankingTable(_props: RankingTableProps) {
         <table className="w-full min-w-[700px]">
           <thead>
             <tr className="border-t border-border bg-kpi-surface/50">
-              <th className="text-left text-xs font-medium text-muted-foreground px-4 md:px-6 py-3 w-12 md:w-16">順位</th>
-              <th className="text-left text-xs font-medium text-muted-foreground px-4 md:px-6 py-3 min-w-[80px]">担当者</th>
+              <th className="text-left text-xs font-medium text-muted-foreground px-4 md:px-6 py-3 w-12 md:w-16 sticky left-0 z-10 bg-kpi-surface/95">順位</th>
+              <th className="text-left text-xs font-medium text-muted-foreground px-4 md:px-6 py-3 min-w-[80px] sticky left-[48px] z-10 bg-kpi-surface/95 border-r border-border/50">担当者</th>
               <th className="text-right text-xs font-medium text-muted-foreground px-4 md:px-6 py-3">案件数</th>
               <th className="text-right text-xs font-medium text-muted-foreground px-4 md:px-6 py-3 min-w-[90px]">売上</th>
               <th className="text-right text-xs font-medium text-muted-foreground px-4 md:px-6 py-3 min-w-[90px]">原価</th>
@@ -154,12 +154,12 @@ export default function RankingTable(_props: RankingTableProps) {
                       isOpen ? "bg-kpi-surface/60" : "hover:bg-kpi-surface/30"
                     )}
                   >
-                    <td className="px-4 md:px-6 py-4">
+                    <td className={cn("px-4 md:px-6 py-4 sticky left-0 z-10", isOpen ? "bg-kpi-surface" : "bg-card")}>
                       <span className={cn("text-lg font-bold", rankColors[entry.rank] || "text-muted-foreground")}>
                         {entry.rank}
                       </span>
                     </td>
-                    <td className="px-4 md:px-6 py-4 font-semibold text-foreground">{entry.name}</td>
+                    <td className={cn("px-4 md:px-6 py-4 font-semibold text-foreground sticky left-[48px] z-10 border-r border-border/50", isOpen ? "bg-kpi-surface" : "bg-card")}>{entry.name}</td>
                     <td className="px-4 md:px-6 py-4 text-right text-sm text-muted-foreground">{entry.projects}件</td>
                     <td className="px-4 md:px-6 py-4 text-right text-sm text-foreground tabular-nums">{fmt(entry.totalContract)}</td>
                     <td className="px-4 md:px-6 py-4 text-right text-sm text-foreground tabular-nums">{fmt(entry.totalCost)}</td>
@@ -177,7 +177,7 @@ export default function RankingTable(_props: RankingTableProps) {
                     </td>
                   </tr>
                   <tr key={`${entry.staffId}-detail`}>
-                    <td colSpan={8} className="p-0">
+                    <td colSpan={8} className="p-0 sticky left-0">
                       <div
                         className="overflow-hidden"
                         style={{
