@@ -32,6 +32,9 @@ export default function Projects() {
     contract_amount: "",
   });
   const [saving, setSaving] = useState(false);
+  const [inlineEditId, setInlineEditId] = useState<string | null>(null);
+  const [inlineValue, setInlineValue] = useState("");
+  const [inlineSaving, setInlineSaving] = useState(false);
   const [editTarget, setEditTarget] = useState<Project | null>(null);
   const [editForm, setEditForm] = useState({
     name: "",
@@ -113,6 +116,20 @@ export default function Projects() {
     await supabase.from("project_costs").delete().eq("project_id", p.id);
     const { error } = await supabase.from("projects").delete().eq("id", p.id);
     if (error) { alert("削除失敗: " + error.message); return; }
+    load();
+  }
+
+  function startInlineEdit(p: Project) {
+    setInlineEditId(p.id);
+    setInlineValue(p.contract_amount ? String(p.contract_amount) : "");
+  }
+
+  async function saveInline(projectId: string) {
+    setInlineSaving(true);
+    const val = inlineValue ? Number(inlineValue) : null;
+    await supabase.from("projects").update({ contract_amount: val }).eq("id", projectId);
+    setInlineEditId(null);
+    setInlineSaving(false);
     load();
   }
 
@@ -206,8 +223,29 @@ export default function Projects() {
                   <td className="px-4 md:px-6 py-4 font-semibold text-foreground">{p.name}</td>
                   <td className="px-4 md:px-6 py-4 text-sm text-muted-foreground">{p.customer_name ?? "-"}</td>
                   <td className="px-4 md:px-6 py-4 text-sm text-foreground">{p.staff?.name ?? "-"}</td>
-                  <td className="px-4 md:px-6 py-4 text-right text-sm text-foreground tabular-nums">
-                    {p.contract_amount ? fmt(p.contract_amount) : "-"}
+                  <td className="px-4 md:px-6 py-1 text-right text-sm text-foreground tabular-nums">
+                    {inlineEditId === p.id ? (
+                      inlineSaving ? (
+                        <span className="text-muted-foreground text-xs">保存中...</span>
+                      ) : (
+                        <input
+                          type="number"
+                          autoFocus
+                          value={inlineValue}
+                          onChange={(e) => setInlineValue(e.target.value)}
+                          onBlur={() => saveInline(p.id)}
+                          onKeyDown={(e) => { if (e.key === "Enter") saveInline(p.id); }}
+                          className="w-full bg-transparent text-right text-sm text-foreground outline-none border-b border-primary py-3 tabular-nums [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                        />
+                      )
+                    ) : (
+                      <button
+                        onClick={() => startInlineEdit(p)}
+                        className="w-full text-right py-3 hover:text-primary transition-colors cursor-pointer"
+                      >
+                        {p.contract_amount ? fmt(p.contract_amount) : "-"}
+                      </button>
+                    )}
                   </td>
                   <td className="px-4 md:px-6 py-4 text-right text-sm text-foreground tabular-nums">{fmt(p.totalCost)}</td>
                   <td className="px-4 md:px-6 py-4 text-right font-semibold text-foreground tabular-nums">
