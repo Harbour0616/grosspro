@@ -4,8 +4,8 @@ import { cn } from "@/lib/utils";
 const navItems = [
   { id: "dashboard", label: "ダッシュボード", icon: BarChart3 },
   { id: "projects", label: "工事一覧", icon: HardHat },
+  { id: "import", label: "Excel台帳インポート", icon: FileSpreadsheet },
   { id: "staff", label: "担当者マスタ", icon: Users },
-  { id: "import", label: "Excelインポート", icon: FileSpreadsheet },
 ];
 
 interface SidebarProps {

@@ -69,7 +69,7 @@ export default function App() {
               <Building2 className="w-5 h-5 text-primary-foreground" />
             </div>
             <div>
-              <h1 className="text-lg font-bold text-foreground">粗利管理ダッシュボード</h1>
+              <h1 className="text-lg font-bold text-foreground">株式会社プラシアハウス</h1>
               <p className="text-xs text-muted-foreground">2025年度</p>
             </div>
           </div>
@@ -78,10 +78,10 @@ export default function App() {
           {page === "dashboard" && (
             <>
               <div className="hidden md:grid grid-cols-2 lg:grid-cols-4 gap-4">
+                <KpiCard title="売上合計" value={kpi?.salesTotal ?? "---"} icon={Building2} />
                 <KpiCard title="粗利合計" value={kpi?.grossTotal ?? "---"} icon={TrendingUp} />
                 <KpiCard title="平均粗利率" value={kpi?.avgRate ?? "---"} icon={Percent} />
                 <KpiCard title="案件数" value={kpi?.count ?? "---"} icon={BarChart3} />
-                <KpiCard title="売上合計" value={kpi?.salesTotal ?? "---"} icon={Building2} />
               </div>
               <RankingTable />
             </>
