@@ -194,8 +194,8 @@ export default function RankingTable({ onProjectClick }: RankingTableProps) {
                               <thead>
                                 <tr>
                                   <th className="text-left text-xs font-medium text-muted-foreground pb-2">工事名</th>
-                                  <th className="text-right text-xs font-medium text-muted-foreground pb-2">契約金額</th>
-                                  <th className="text-right text-xs font-medium text-muted-foreground pb-2">現場経費</th>
+                                  <th className="text-right text-xs font-medium text-muted-foreground pb-2">売上</th>
+                                  <th className="text-right text-xs font-medium text-muted-foreground pb-2">原価</th>
                                   <th className="text-right text-xs font-medium text-muted-foreground pb-2">粗利</th>
                                   <th className="text-right text-xs font-medium text-muted-foreground pb-2">粗利率</th>
                                 </tr>
