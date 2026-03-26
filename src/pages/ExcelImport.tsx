@@ -9,6 +9,8 @@ interface ParsedData {
   customerName: string;
   contractAmount: number;
   costAmount: number;
+  staffName: string;
+  staffId: string | null;
   existingProjectId: string | null;
 }
 
@@ -60,6 +62,7 @@ export default function ExcelImport() {
       const customerName = String(rows[4]?.[3] ?? "").trim();    // D5
       const contractAmount = Number(rows[8]?.[6] ?? 0);          // G9
       const costAmount = Number(rows[14]?.[6] ?? 0);             // G15
+      const staffName = String(rows[1]?.[17] ?? "").trim();      // R2
 
       if (!projectNumber) {
         setError("物件番号が入力されていません。Excelの物件番号欄を入力してからアップロードしてください。");
@@ -70,14 +73,16 @@ export default function ExcelImport() {
         return;
       }
 
-      const { data: existing } = await supabase
-        .from("projects")
-        .select("id")
-        .eq("project_number", projectNumber)
-        .maybeSingle();
+      const [{ data: existing }, { data: matchedStaff }] = await Promise.all([
+        supabase.from("projects").select("id").eq("project_number", projectNumber).maybeSingle(),
+        staffName
+          ? supabase.from("staff").select("id").eq("name", staffName).maybeSingle()
+          : Promise.resolve({ data: null }),
+      ]);
 
       setParsed({
         projectNumber, projectName, customerName, contractAmount, costAmount,
+        staffName, staffId: matchedStaff?.id ?? null,
         existingProjectId: existing?.id ?? null,
       });
     } catch {
@@ -96,6 +101,7 @@ export default function ExcelImport() {
       customer_name: parsed.customerName || null,
       contract_amount: parsed.contractAmount || 0,
       cost_amount: parsed.costAmount || 0,
+      staff_id: parsed.staffId,
     };
 
     if (parsed.existingProjectId) {
@@ -178,6 +184,16 @@ export default function ExcelImport() {
                 <tr className="border-b border-border">
                   <td className="px-6 py-3 text-muted-foreground">顧客名</td>
                   <td className="px-6 py-3 text-foreground">{parsed.customerName || "-"}</td>
+                </tr>
+                <tr className="border-b border-border">
+                  <td className="px-6 py-3 text-muted-foreground">担当者</td>
+                  <td className="px-6 py-3 text-foreground">
+                    {parsed.staffName
+                      ? parsed.staffId
+                        ? parsed.staffName
+                        : <span>{parsed.staffName} <span className="text-kpi-amber text-xs">（担当者未登録）</span></span>
+                      : "-"}
+                  </td>
                 </tr>
                 <tr className="border-b border-border">
                   <td className="px-6 py-3 text-muted-foreground">契約金額</td>
