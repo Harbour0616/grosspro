@@ -23,7 +23,7 @@ interface ProjectLedgerProps {
   onBack: () => void;
 }
 
-const fmt = (n: number) => `${n.toLocaleString()}円`;
+const fmt = (n: number) => n.toLocaleString();
 
 /** 月ラベルのソート順 */
 const MONTH_ORDER = [
