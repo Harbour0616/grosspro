@@ -1,38 +1,34 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { TrendingUp, Percent, Building2, BarChart3 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
+import KpiCard from "@/components/KpiCard";
+import RankingTable from "@/components/RankingTable";
 
-type StaffSummary = {
-  id: string;
-  name: string;
-  totalRevenue: number;
-  totalCost: number;
-  grossProfit: number;
-  grossProfitRate: number;
+type Kpi = {
+  totalGrossProfit: string;
+  avgGrossProfitRate: string;
+  projectCount: string;
+  avgProjectGrossProfit: string;
 };
 
-export default function Dashboard() {
-  const [data, setData] = useState<StaffSummary[]>([]);
-  const [loading, setLoading] = useState(true);
+export default function Page() {
+  const [kpi, setKpi] = useState<Kpi | null>(null);
 
   useEffect(() => {
-    fetchData();
+    fetchKpi();
   }, []);
 
-  async function fetchData() {
-    const { data: staff } = await supabase.from("staff").select("id, name");
+  async function fetchKpi() {
     const { data: projects } = await supabase
       .from("projects")
-      .select("id, staff_id, contract_amount");
+      .select("id, contract_amount");
     const { data: costs } = await supabase
       .from("project_costs")
       .select("project_id, amount");
 
-    if (!staff || !projects) {
-      setLoading(false);
-      return;
-    }
+    if (!projects) return;
 
     const costByProject = new Map<string, number>();
     (costs ?? []).forEach((c) => {
@@ -42,94 +38,76 @@ export default function Dashboard() {
       );
     });
 
-    const summaries: StaffSummary[] = staff.map((s) => {
-      const staffProjects = projects.filter((p) => p.staff_id === s.id);
-      const totalRevenue = staffProjects.reduce(
-        (sum, p) => sum + (p.contract_amount ?? 0),
-        0
-      );
-      const totalCost = staffProjects.reduce(
-        (sum, p) => sum + (costByProject.get(p.id) ?? 0),
-        0
-      );
-      const grossProfit = totalRevenue - totalCost;
-      const grossProfitRate = totalRevenue > 0 ? (grossProfit / totalRevenue) * 100 : 0;
-
-      return {
-        id: s.id,
-        name: s.name,
-        totalRevenue,
-        totalCost,
-        grossProfit,
-        grossProfitRate,
-      };
+    let totalRevenue = 0;
+    let totalCost = 0;
+    projects.forEach((p) => {
+      totalRevenue += p.contract_amount ?? 0;
+      totalCost += costByProject.get(p.id) ?? 0;
     });
 
-    summaries.sort((a, b) => b.grossProfitRate - a.grossProfitRate);
-    setData(summaries);
-    setLoading(false);
+    const totalGP = totalRevenue - totalCost;
+    const avgRate = totalRevenue > 0 ? (totalGP / totalRevenue) * 100 : 0;
+    const avgGP = projects.length > 0 ? totalGP / projects.length : 0;
+
+    const fmtYen = (n: number) => {
+      if (Math.abs(n) >= 1e8) return `¥${(n / 1e8).toFixed(2)}億`;
+      if (Math.abs(n) >= 1e4) return `¥${Math.round(n / 1e4)}万`;
+      return `¥${n.toLocaleString()}`;
+    };
+
+    setKpi({
+      totalGrossProfit: fmtYen(totalGP),
+      avgGrossProfitRate: `${avgRate.toFixed(1)}%`,
+      projectCount: `${projects.length}件`,
+      avgProjectGrossProfit: fmtYen(avgGP),
+    });
   }
 
-  const fmt = (n: number) =>
-    n.toLocaleString("ja-JP", { style: "currency", currency: "JPY" });
+  const now = new Date();
+  const fy = now.getMonth() >= 4 ? now.getFullYear() : now.getFullYear() - 1;
 
   return (
-    <>
-      <h1 className="text-2xl font-bold mb-6">ダッシュボード</h1>
-      <div className="bg-white rounded-lg shadow">
-        <div className="px-6 py-4 border-b border-gray-200">
-          <h2 className="text-lg font-semibold">担当者別粗利ランキング</h2>
-        </div>
-        {loading ? (
-          <div className="p-8 text-center text-gray-500">読み込み中...</div>
-        ) : data.length === 0 ? (
-          <div className="p-8 text-center text-gray-500">
-            データがありません。担当者と工事を登録してください。
+    <div className="min-h-screen bg-[#FAFAF8]">
+      <header className="border-b border-gray-200 bg-white/80 backdrop-blur-sm sticky top-0 z-10">
+        <div className="container max-w-6xl mx-auto px-4 py-4 flex items-center gap-3">
+          <div className="w-9 h-9 rounded-xl bg-gray-900 flex items-center justify-center">
+            <Building2 className="w-5 h-5 text-white" />
           </div>
-        ) : (
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-gray-200 text-left text-gray-500">
-                <th className="px-6 py-3 font-medium">順位</th>
-                <th className="px-6 py-3 font-medium">担当者名</th>
-                <th className="px-6 py-3 font-medium text-right">売上合計</th>
-                <th className="px-6 py-3 font-medium text-right">原価合計</th>
-                <th className="px-6 py-3 font-medium text-right">粗利</th>
-                <th className="px-6 py-3 font-medium text-right">粗利率</th>
-              </tr>
-            </thead>
-            <tbody>
-              {data.map((s, i) => (
-                <tr
-                  key={s.id}
-                  className="border-b border-gray-100 hover:bg-gray-50"
-                >
-                  <td className="px-6 py-3 font-semibold text-gray-700">
-                    {i + 1}
-                  </td>
-                  <td className="px-6 py-3 font-medium">{s.name}</td>
-                  <td className="px-6 py-3 text-right">{fmt(s.totalRevenue)}</td>
-                  <td className="px-6 py-3 text-right">{fmt(s.totalCost)}</td>
-                  <td
-                    className={`px-6 py-3 text-right font-semibold ${
-                      s.grossProfit >= 0 ? "text-green-600" : "text-red-600"
-                    }`}
-                  >
-                    {fmt(s.grossProfit)}
-                  </td>
-                  <td
-                    className={`px-6 py-3 text-right font-semibold ${
-                      s.grossProfitRate >= 0 ? "text-green-600" : "text-red-600"
-                    }`}
-                  >
-                    {s.grossProfitRate.toFixed(1)}%
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </div>
-    </>
+          <div>
+            <h1 className="text-lg font-bold text-gray-900">粗利管理ダッシュボード</h1>
+            <p className="text-xs text-gray-400">{fy}年度</p>
+          </div>
+        </div>
+      </header>
+      <main className="container max-w-6xl mx-auto px-4 py-8 space-y-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <KpiCard
+            title="粗利合計"
+            value={kpi?.totalGrossProfit ?? "---"}
+            subtitle=""
+            icon={TrendingUp}
+          />
+          <KpiCard
+            title="平均粗利率"
+            value={kpi?.avgGrossProfitRate ?? "---"}
+            subtitle=""
+            icon={Percent}
+          />
+          <KpiCard
+            title="案件数"
+            value={kpi?.projectCount ?? "---"}
+            subtitle=""
+            icon={BarChart3}
+          />
+          <KpiCard
+            title="平均案件粗利"
+            value={kpi?.avgProjectGrossProfit ?? "---"}
+            subtitle=""
+            icon={Building2}
+          />
+        </div>
+        <RankingTable />
+      </main>
+    </div>
   );
 }
