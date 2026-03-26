@@ -42,9 +42,7 @@ interface ProjectDetail {
   endMonth: string | null;
 }
 
-interface RankingTableProps {
-  onProjectClick?: (projectId: string, projectName: string) => void;
-}
+interface RankingTableProps {}
 
 const fmtFull = (n: number) => n.toLocaleString();
 const fmtMan = (n: number) => `${Math.floor(n / 10000)}万`;
@@ -55,7 +53,7 @@ const rankColors: Record<number, string> = {
   3: "text-rank-bronze",
 };
 
-export default function RankingTable({ onProjectClick }: RankingTableProps) {
+export default function RankingTable(_props: RankingTableProps) {
   const isMobile = useIsMobile();
   const fmt = isMobile ? fmtMan : fmtFull;
   const [rawData, setRawData] = useState<RankingEntry[]>([]);

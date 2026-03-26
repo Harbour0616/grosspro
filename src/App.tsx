@@ -83,7 +83,7 @@ export default function App() {
                 <KpiCard title="案件数" value={kpi?.count ?? "---"} icon={BarChart3} />
                 <KpiCard title="売上合計" value={kpi?.salesTotal ?? "---"} icon={Building2} />
               </div>
-              <RankingTable onProjectClick={(id, name) => setPage({ name: "ledger", projectId: id, projectName: name })} />
+              <RankingTable />
             </>
           )}
           {page === "projects" && <Projects />}
