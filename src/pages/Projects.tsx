@@ -48,7 +48,8 @@ export default function Projects() {
   const [panelOpen, setPanelOpen] = useState(false);
   const [editForm, setEditForm] = useState<EditForm>(emptyEditForm);
 
-  async function load() {
+  async function load(restoreScroll = false) {
+    const scrollY = restoreScroll ? window.scrollY : 0;
     const [{ data: pj }, { data: st }] = await Promise.all([
       supabase.from("projects").select("id, project_number, name, customer_name, staff_id, contract_amount, cost_amount, start_month, end_month"),
       supabase.from("staff").select("id, name"),
@@ -64,6 +65,12 @@ export default function Projects() {
       return { ...p, staff: st.find((s) => s.id === p.staff_id), grossProfit, profitRate };
     });
     setProjects(mapped);
+
+    if (restoreScroll) {
+      requestAnimationFrame(() => {
+        window.scrollTo({ top: scrollY, behavior: "instant" });
+      });
+    }
   }
 
   useEffect(() => { load(); }, []);
@@ -118,7 +125,7 @@ export default function Projects() {
     }).eq("id", editTarget.id);
     setSaving(false);
     if (error) { alert("更新失敗: " + error.message); return; }
-    await load();
+    await load(true);
     closePanel();
   }
 
@@ -126,7 +133,7 @@ export default function Projects() {
     if (!confirm(`「${p.name}」を本当に削除しますか？`)) return;
     const { error } = await supabase.from("projects").delete().eq("id", p.id);
     if (error) { alert("削除失敗: " + error.message); return; }
-    load();
+    load(true);
   }
 
   function startInlineEdit(p: Project) {
@@ -140,7 +147,7 @@ export default function Projects() {
     await supabase.from("projects").update({ contract_amount: val }).eq("id", projectId);
     setInlineEditId(null);
     setInlineSaving(false);
-    load();
+    load(true);
   }
 
   const fmt = (n: number) => n.toLocaleString();
