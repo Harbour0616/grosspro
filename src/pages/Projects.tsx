@@ -10,6 +10,7 @@ interface Staff {
 
 interface Project {
   id: string;
+  project_number: string | null;
   name: string;
   customer_name: string | null;
   staff_id: string | null;
@@ -34,7 +35,7 @@ export default function Projects() {
 
   async function load() {
     const [{ data: pj }, { data: st }] = await Promise.all([
-      supabase.from("projects").select("id, name, customer_name, staff_id, contract_amount, cost_amount"),
+      supabase.from("projects").select("id, project_number, name, customer_name, staff_id, contract_amount, cost_amount"),
       supabase.from("staff").select("id, name"),
     ]);
     if (!pj || !st) return;
@@ -158,6 +159,7 @@ export default function Projects() {
           <table className="w-full min-w-[800px]">
             <thead>
               <tr className="border-b border-border bg-kpi-surface/50">
+                <th className="text-left text-xs font-medium text-muted-foreground px-4 md:px-6 py-3 min-w-[90px]">物件番号</th>
                 <th className="text-left text-xs font-medium text-muted-foreground px-4 md:px-6 py-3 min-w-[120px]">工事名</th>
                 <th className="text-left text-xs font-medium text-muted-foreground px-4 md:px-6 py-3 min-w-[80px]">顧客名</th>
                 <th className="text-right text-xs font-medium text-muted-foreground px-4 md:px-6 py-3 min-w-[90px]">契約金額</th>
@@ -171,6 +173,7 @@ export default function Projects() {
             <tbody>
               {projects.map((p) => (
                 <tr key={p.id} className="border-t border-border hover:bg-kpi-surface/30 transition-colors">
+                  <td className="px-4 md:px-6 py-4 text-sm text-foreground">{p.project_number ?? "-"}</td>
                   <td className="px-4 md:px-6 py-4 font-semibold text-foreground">{p.name}</td>
                   <td className="px-4 md:px-6 py-4 text-sm text-muted-foreground">{p.customer_name ?? "-"}</td>
                   <td className="px-4 md:px-6 py-1 text-right text-sm text-foreground tabular-nums">
@@ -223,7 +226,7 @@ export default function Projects() {
               ))}
               {projects.length === 0 && (
                 <tr>
-                  <td colSpan={8} className="px-6 py-12 text-center text-muted-foreground">工事データがありません</td>
+                  <td colSpan={9} className="px-6 py-12 text-center text-muted-foreground">工事データがありません</td>
                 </tr>
               )}
             </tbody>
