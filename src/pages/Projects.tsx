@@ -37,7 +37,6 @@ export default function Projects() {
     name: "",
     customer_name: "",
     staff_id: "",
-    sales_amount: "",
   });
 
   async function load() {
@@ -91,7 +90,6 @@ export default function Projects() {
       name: p.name,
       customer_name: p.customer_name ?? "",
       staff_id: p.staff_id ?? "",
-      sales_amount: p.sales_amount != null ? String(p.sales_amount) : "",
     });
   }
 
@@ -103,7 +101,6 @@ export default function Projects() {
       name: editForm.name,
       customer_name: editForm.customer_name || null,
       staff_id: editForm.staff_id || null,
-      sales_amount: editForm.sales_amount ? Number(editForm.sales_amount) : null,
     }).eq("id", editTarget.id);
     setSaving(false);
     if (error) { alert("更新失敗: " + error.message); return; }
@@ -197,7 +194,6 @@ export default function Projects() {
                 <th className="text-left text-xs font-medium text-muted-foreground px-6 py-3">顧客名</th>
                 <th className="text-left text-xs font-medium text-muted-foreground px-6 py-3">担当者</th>
                 <th className="text-right text-xs font-medium text-muted-foreground px-6 py-3">請負金額</th>
-                <th className="text-right text-xs font-medium text-muted-foreground px-6 py-3">売上金額</th>
                 <th className="text-right text-xs font-medium text-muted-foreground px-6 py-3">粗利</th>
                 <th className="text-right text-xs font-medium text-muted-foreground px-6 py-3">粗利率</th>
                 <th className="text-right text-xs font-medium text-muted-foreground px-6 py-3 w-20">操作</th>
@@ -211,9 +207,6 @@ export default function Projects() {
                   <td className="px-6 py-4 text-sm text-foreground">{p.staff?.name ?? "-"}</td>
                   <td className="px-6 py-4 text-right text-sm text-foreground">
                     {p.contract_amount ? formatYen(p.contract_amount) : "-"}
-                  </td>
-                  <td className="px-6 py-4 text-right text-sm text-foreground">
-                    {p.sales_amount ? formatYen(p.sales_amount) : "-"}
                   </td>
                   <td className="px-6 py-4 text-right font-semibold text-foreground">{formatYen(p.grossProfit)}</td>
                   <td className="px-6 py-4 text-right">
@@ -246,7 +239,7 @@ export default function Projects() {
               ))}
               {projects.length === 0 && (
                 <tr>
-                  <td colSpan={8} className="px-6 py-12 text-center text-muted-foreground">
+                  <td colSpan={7} className="px-6 py-12 text-center text-muted-foreground">
                     工事データがありません
                   </td>
                 </tr>
@@ -300,16 +293,6 @@ export default function Projects() {
                     <option key={s.id} value={s.id}>{s.name}</option>
                   ))}
                 </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-foreground mb-1">売上金額</label>
-                <input
-                  type="number"
-                  value={editForm.sales_amount}
-                  onChange={(e) => setEditForm({ ...editForm, sales_amount: e.target.value })}
-                  className="w-full px-3 py-2 rounded-lg border border-input bg-background text-foreground text-sm"
-                  placeholder="例: 50000000"
-                />
               </div>
             </div>
             <div className="flex justify-end gap-3 pt-2">
