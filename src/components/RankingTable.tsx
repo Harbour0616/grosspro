@@ -186,7 +186,15 @@ export default function RankingTable({ onProjectClick }: RankingTableProps) {
                       <td colSpan={8} className="p-0">
                         <div className="bg-kpi-surface/40 px-6 py-4">
                           {loadingDetail ? (
-                            <p className="text-sm text-muted-foreground py-2">読み込み中...</p>
+                            <div className="h-1 rounded-full overflow-hidden" style={{ background: "hsl(var(--border))" }}>
+                              <div
+                                className="h-full w-1/2 rounded-full"
+                                style={{
+                                  background: "linear-gradient(90deg, transparent, hsl(152 40% 22%), hsl(152 45% 35%), transparent)",
+                                  animation: "glow-slide 1s linear infinite",
+                                }}
+                              />
+                            </div>
                           ) : details.length === 0 ? (
                             <p className="text-sm text-muted-foreground py-2">担当工事がありません</p>
                           ) : (
