@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { cn } from "@/lib/utils";
-import { Plus, X } from "lucide-react";
+import { Plus, X, Pencil } from "lucide-react";
 
 interface Staff {
   id: string;
@@ -31,6 +31,13 @@ export default function Projects() {
     contract_amount: "",
   });
   const [saving, setSaving] = useState(false);
+  const [editTarget, setEditTarget] = useState<Project | null>(null);
+  const [editForm, setEditForm] = useState({
+    name: "",
+    customer_name: "",
+    staff_id: "",
+    contract_amount: "",
+  });
 
   async function load() {
     const [{ data: pj }, { data: st }, { data: costs }] = await Promise.all([
@@ -74,6 +81,32 @@ export default function Projects() {
     if (error) { alert("登録失敗: " + error.message); return; }
     setForm({ name: "", customer_name: "", staff_id: "", contract_amount: "" });
     setShowForm(false);
+    load();
+  }
+
+  function openEdit(p: Project) {
+    setEditTarget(p);
+    setEditForm({
+      name: p.name,
+      customer_name: p.customer_name ?? "",
+      staff_id: p.staff_id ?? "",
+      contract_amount: p.contract_amount != null ? String(p.contract_amount) : "",
+    });
+  }
+
+  async function handleEditSave(e: React.FormEvent) {
+    e.preventDefault();
+    if (!editTarget) return;
+    setSaving(true);
+    const { error } = await supabase.from("projects").update({
+      name: editForm.name,
+      customer_name: editForm.customer_name || null,
+      staff_id: editForm.staff_id || null,
+      contract_amount: editForm.contract_amount ? Number(editForm.contract_amount) : null,
+    }).eq("id", editTarget.id);
+    setSaving(false);
+    if (error) { alert("更新失敗: " + error.message); return; }
+    setEditTarget(null);
     load();
   }
 
@@ -160,6 +193,7 @@ export default function Projects() {
                 <th className="text-right text-xs font-medium text-muted-foreground px-6 py-3">請負金額</th>
                 <th className="text-right text-xs font-medium text-muted-foreground px-6 py-3">粗利</th>
                 <th className="text-right text-xs font-medium text-muted-foreground px-6 py-3">粗利率</th>
+                <th className="text-right text-xs font-medium text-muted-foreground px-6 py-3 w-20">操作</th>
               </tr>
             </thead>
             <tbody>
@@ -180,11 +214,20 @@ export default function Projects() {
                       {p.profitRate.toFixed(1)}%
                     </span>
                   </td>
+                  <td className="px-6 py-4 text-right">
+                    <button
+                      onClick={() => openEdit(p)}
+                      className="p-1.5 rounded-lg hover:bg-primary/10 text-muted-foreground hover:text-primary transition-colors"
+                      title="編集"
+                    >
+                      <Pencil className="w-4 h-4" />
+                    </button>
+                  </td>
                 </tr>
               ))}
               {projects.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="px-6 py-12 text-center text-muted-foreground">
+                  <td colSpan={7} className="px-6 py-12 text-center text-muted-foreground">
                     工事データがありません
                   </td>
                 </tr>
@@ -193,6 +236,82 @@ export default function Projects() {
           </table>
         </div>
       </div>
+
+      {/* Edit modal */}
+      {editTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/40" onClick={() => setEditTarget(null)} />
+          <form
+            onSubmit={handleEditSave}
+            className="relative z-10 w-full max-w-lg rounded-2xl bg-card border border-border p-6 space-y-4 shadow-xl"
+          >
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-bold text-foreground">工事編集</h3>
+              <button type="button" onClick={() => setEditTarget(null)} className="p-1 rounded-lg hover:bg-muted transition-colors">
+                <X className="w-5 h-5 text-muted-foreground" />
+              </button>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-1">工事名 *</label>
+                <input
+                  required
+                  value={editForm.name}
+                  onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
+                  className="w-full px-3 py-2 rounded-lg border border-input bg-background text-foreground text-sm"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-1">顧客名</label>
+                <input
+                  value={editForm.customer_name}
+                  onChange={(e) => setEditForm({ ...editForm, customer_name: e.target.value })}
+                  className="w-full px-3 py-2 rounded-lg border border-input bg-background text-foreground text-sm"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-1">担当者</label>
+                <select
+                  value={editForm.staff_id}
+                  onChange={(e) => setEditForm({ ...editForm, staff_id: e.target.value })}
+                  className="w-full px-3 py-2 rounded-lg border border-input bg-background text-foreground text-sm"
+                >
+                  <option value="">未選択</option>
+                  {staffList.map((s) => (
+                    <option key={s.id} value={s.id}>{s.name}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-1">請負金額</label>
+                <input
+                  type="number"
+                  value={editForm.contract_amount}
+                  onChange={(e) => setEditForm({ ...editForm, contract_amount: e.target.value })}
+                  className="w-full px-3 py-2 rounded-lg border border-input bg-background text-foreground text-sm"
+                  placeholder="例: 50000000"
+                />
+              </div>
+            </div>
+            <div className="flex justify-end gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setEditTarget(null)}
+                className="px-4 py-2 rounded-lg border border-border text-sm font-medium text-foreground hover:bg-muted transition-colors"
+              >
+                キャンセル
+              </button>
+              <button
+                type="submit"
+                disabled={saving}
+                className="px-6 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-50"
+              >
+                {saving ? "保存中..." : "保存"}
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
     </div>
   );
 }
