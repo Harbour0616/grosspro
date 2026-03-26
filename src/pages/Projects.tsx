@@ -113,6 +113,7 @@ export default function Projects() {
   async function handleEditSave(e: React.FormEvent) {
     e.preventDefault();
     if (!editTarget) return;
+    const scrollY = window.scrollY;
     setSaving(true);
     const { error } = await supabase.from("projects").update({
       name: editForm.name,
@@ -125,8 +126,24 @@ export default function Projects() {
     }).eq("id", editTarget.id);
     setSaving(false);
     if (error) { alert("更新失敗: " + error.message); return; }
-    await load(true);
     closePanel();
+    const [{ data: pj }, { data: st }] = await Promise.all([
+      supabase.from("projects").select("id, project_number, name, customer_name, staff_id, contract_amount, cost_amount, start_month, end_month"),
+      supabase.from("staff").select("id, name"),
+    ]);
+    if (!pj || !st) return;
+    setStaffList(st);
+    const mapped: Project[] = pj.map((p) => {
+      const contract = p.contract_amount ?? 0;
+      const cost = p.cost_amount ?? 0;
+      const grossProfit = contract - cost;
+      const profitRate = contract > 0 ? (grossProfit / contract) * 100 : 0;
+      return { ...p, staff: st.find((s) => s.id === p.staff_id), grossProfit, profitRate };
+    });
+    setProjects(mapped);
+    requestAnimationFrame(() => {
+      window.scrollTo({ top: scrollY, behavior: "instant" });
+    });
   }
 
   async function handleDelete(p: Project) {
