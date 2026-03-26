@@ -176,48 +176,66 @@ export default function RankingTable(_props: RankingTableProps) {
                       {isOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
                     </td>
                   </tr>
-                  {details.length === 0 && isOpen ? (
-                    <tr key={`${entry.staffId}-empty`} className="bg-kpi-surface/40">
-                      <td />
-                      <td colSpan={7} className="px-4 md:px-6 py-3 text-sm text-muted-foreground">担当工事がありません</td>
-                    </tr>
-                  ) : details.map((d) => (
-                    <tr
-                      key={d.id}
-                      className="bg-kpi-surface/40 overflow-hidden"
-                      style={{
-                        maxHeight: isOpen ? 100 : 0,
-                        opacity: isOpen ? 1 : 0,
-                        transition: "max-height 0.3s ease-in-out, opacity 0.2s ease-in-out",
-                      }}
-                    >
-                      <td />
-                      <td className="px-4 md:px-6 py-2 text-sm text-foreground">
-                        <span className="inline-flex items-center gap-2">
-                          <span>{d.name}</span>
-                          <span className={cn(
-                            "inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium whitespace-nowrap",
-                            d.endMonth ? "bg-primary/10 text-primary" : "bg-kpi-amber/10 text-kpi-amber"
-                          )}>
-                            {d.endMonth ? "完工" : "進行中"}
-                          </span>
-                        </span>
-                      </td>
-                      <td />
-                      <td className="px-4 md:px-6 py-2 text-right text-sm text-foreground tabular-nums">{fmt(d.contractAmount)}</td>
-                      <td className="px-4 md:px-6 py-2 text-right text-sm text-foreground tabular-nums">{fmt(d.costAmount)}</td>
-                      <td className="px-4 md:px-6 py-2 text-right text-sm font-semibold text-foreground tabular-nums">{fmt(d.grossProfit)}</td>
-                      <td className="px-4 md:px-6 py-2 text-right">
-                        <span className={cn(
-                          "inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium",
-                          rateColor(d.profitRate)
-                        )}>
-                          {d.profitRate.toFixed(1)}%
-                        </span>
-                      </td>
-                      <td />
-                    </tr>
-                  ))}
+                  <tr key={`${entry.staffId}-detail`}>
+                    <td colSpan={8} className="p-0">
+                      <div
+                        className="overflow-hidden"
+                        style={{
+                          maxHeight: isOpen ? 2000 : 0,
+                          opacity: isOpen ? 1 : 0,
+                          transition: "max-height 0.3s ease-in-out, opacity 0.2s ease-in-out",
+                        }}
+                      >
+                        {details.length === 0 ? (
+                          <div className="bg-kpi-surface/40 px-4 md:px-6 py-3 text-sm text-muted-foreground">担当工事がありません</div>
+                        ) : (
+                          <table className="w-full bg-kpi-surface/40" style={{ tableLayout: "fixed" }}>
+                            <colgroup>
+                              <col style={{ width: "7%" }} />
+                              <col style={{ width: "22%" }} />
+                              <col style={{ width: "9%" }} />
+                              <col style={{ width: "17%" }} />
+                              <col style={{ width: "17%" }} />
+                              <col style={{ width: "17%" }} />
+                              <col style={{ width: "9%" }} />
+                              <col style={{ width: "2%" }} />
+                            </colgroup>
+                            <tbody>
+                              {details.map((d) => (
+                                <tr key={d.id} className="border-t border-border/30">
+                                  <td />
+                                  <td className="px-4 md:px-6 py-2 text-sm text-foreground">
+                                    <span className="inline-flex items-center gap-2">
+                                      <span>{d.name}</span>
+                                      <span className={cn(
+                                        "inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium whitespace-nowrap",
+                                        d.endMonth ? "bg-primary/10 text-primary" : "bg-kpi-amber/10 text-kpi-amber"
+                                      )}>
+                                        {d.endMonth ? "完工" : "進行中"}
+                                      </span>
+                                    </span>
+                                  </td>
+                                  <td />
+                                  <td className="px-4 md:px-6 py-2 text-right text-sm text-foreground tabular-nums">{fmt(d.contractAmount)}</td>
+                                  <td className="px-4 md:px-6 py-2 text-right text-sm text-foreground tabular-nums">{fmt(d.costAmount)}</td>
+                                  <td className="px-4 md:px-6 py-2 text-right text-sm font-semibold text-foreground tabular-nums">{fmt(d.grossProfit)}</td>
+                                  <td className="px-4 md:px-6 py-2 text-right">
+                                    <span className={cn(
+                                      "inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium",
+                                      rateColor(d.profitRate)
+                                    )}>
+                                      {d.profitRate.toFixed(1)}%
+                                    </span>
+                                  </td>
+                                  <td />
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
                 </>
               );
             })}
