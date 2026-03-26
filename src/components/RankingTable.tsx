@@ -23,6 +23,13 @@ interface RankingEntry {
   grossProfit: number;
   profitRate: number;
   projects: number;
+  inProgressCount: number;
+}
+
+function rateColor(rate: number) {
+  if (rate >= 25) return "bg-primary/10 text-primary";
+  if (rate > 10) return "bg-kpi-amber/10 text-kpi-amber";
+  return "bg-destructive/10 text-destructive";
 }
 
 interface ProjectDetail {
@@ -59,7 +66,7 @@ export default function RankingTable({ onProjectClick }: RankingTableProps) {
   useEffect(() => {
     async function load() {
       const { data: staff } = await supabase.from("staff").select("id, name");
-      const { data: projects } = await supabase.from("projects").select("id, staff_id, contract_amount, cost_amount");
+      const { data: projects } = await supabase.from("projects").select("id, staff_id, contract_amount, cost_amount, end_month");
       if (!staff || !projects) return;
 
       const entries: RankingEntry[] = staff.map((s) => {
@@ -68,7 +75,8 @@ export default function RankingTable({ onProjectClick }: RankingTableProps) {
         const totalCost = myProjects.reduce((sum, p) => sum + (p.cost_amount ?? 0), 0);
         const grossProfit = totalContract - totalCost;
         const profitRate = totalContract > 0 ? (grossProfit / totalContract) * 100 : 0;
-        return { staffId: s.id, name: s.name, totalContract, totalCost, grossProfit, profitRate, projects: myProjects.length };
+        const inProgressCount = myProjects.filter((p) => !p.end_month).length;
+        return { staffId: s.id, name: s.name, totalContract, totalCost, grossProfit, profitRate, projects: myProjects.length, inProgressCount };
       });
       setRawData(entries);
     }
@@ -155,14 +163,24 @@ export default function RankingTable({ onProjectClick }: RankingTableProps) {
                         {entry.rank}
                       </span>
                     </td>
-                    <td className="px-4 md:px-6 py-4 font-semibold text-foreground">{entry.name}</td>
+                    <td className="px-4 md:px-6 py-4">
+                      <span className="font-semibold text-foreground">{entry.name}</span>
+                      {entry.projects > 0 && (
+                        <span className={cn(
+                          "ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium",
+                          entry.inProgressCount > 0 ? "bg-kpi-amber/10 text-kpi-amber" : "bg-primary/10 text-primary"
+                        )}>
+                          {entry.inProgressCount > 0 ? `進行中 ${entry.inProgressCount}件` : "完工済"}
+                        </span>
+                      )}
+                    </td>
                     <td className="px-4 md:px-6 py-4 text-right text-sm text-foreground tabular-nums">{fmt(entry.totalContract)}</td>
                     <td className="px-4 md:px-6 py-4 text-right text-sm text-foreground tabular-nums">{fmt(entry.totalCost)}</td>
                     <td className="px-4 md:px-6 py-4 text-right font-semibold text-foreground tabular-nums">{fmt(entry.grossProfit)}</td>
                     <td className="px-4 md:px-6 py-4 text-right">
                       <span className={cn(
                         "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium",
-                        entry.profitRate >= 25 ? "bg-primary/10 text-primary" : "bg-kpi-amber/10 text-kpi-amber"
+                        rateColor(entry.profitRate)
                       )}>
                         {entry.profitRate.toFixed(1)}%
                       </span>
@@ -210,7 +228,7 @@ export default function RankingTable({ onProjectClick }: RankingTableProps) {
                                     <td className="py-2 text-right">
                                       <span className={cn(
                                         "inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium",
-                                        d.profitRate >= 25 ? "bg-primary/10 text-primary" : "bg-kpi-amber/10 text-kpi-amber"
+                                        rateColor(d.profitRate)
                                       )}>
                                         {d.profitRate.toFixed(1)}%
                                       </span>
