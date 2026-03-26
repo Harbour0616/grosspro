@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { cn } from "@/lib/utils";
-import { Plus, X, Pencil } from "lucide-react";
+import { Plus, X, Pencil, Trash2 } from "lucide-react";
 
 interface Staff {
   id: string;
@@ -108,6 +108,14 @@ export default function Projects() {
     setSaving(false);
     if (error) { alert("更新失敗: " + error.message); return; }
     setEditTarget(null);
+    load();
+  }
+
+  async function handleDelete(p: Project) {
+    if (!confirm(`「${p.name}」を本当に削除しますか？`)) return;
+    await supabase.from("project_costs").delete().eq("project_id", p.id);
+    const { error } = await supabase.from("projects").delete().eq("id", p.id);
+    if (error) { alert("削除失敗: " + error.message); return; }
     load();
   }
 
@@ -220,13 +228,22 @@ export default function Projects() {
                     </span>
                   </td>
                   <td className="px-6 py-4 text-right">
-                    <button
-                      onClick={() => openEdit(p)}
-                      className="p-1.5 rounded-lg hover:bg-primary/10 text-muted-foreground hover:text-primary transition-colors"
-                      title="編集"
-                    >
-                      <Pencil className="w-4 h-4" />
-                    </button>
+                    <div className="inline-flex gap-1">
+                      <button
+                        onClick={() => openEdit(p)}
+                        className="p-1.5 rounded-lg hover:bg-primary/10 text-muted-foreground hover:text-primary transition-colors"
+                        title="編集"
+                      >
+                        <Pencil className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => handleDelete(p)}
+                        className="p-1.5 rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
+                        title="削除"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
