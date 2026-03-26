@@ -22,7 +22,7 @@ interface Kpi {
   grossTotal: string;
   avgRate: string;
   count: string;
-  avgProfit: string;
+  salesTotal: string;
 }
 
 const fmtMan = (n: number) => `${Math.floor(n / 10000).toLocaleString()}万`;
@@ -47,7 +47,7 @@ export default function App() {
         grossTotal: fmtMan(gross),
         avgRate: `${rate.toFixed(1)}%`,
         count: `${count}件`,
-        avgProfit: count > 0 ? fmtMan(gross / count) : "0万",
+        salesTotal: fmtMan(totalContract),
       });
     }
     loadKpi();
@@ -81,7 +81,7 @@ export default function App() {
                 <KpiCard title="粗利合計" value={kpi?.grossTotal ?? "---"} icon={TrendingUp} />
                 <KpiCard title="平均粗利率" value={kpi?.avgRate ?? "---"} icon={Percent} />
                 <KpiCard title="案件数" value={kpi?.count ?? "---"} icon={BarChart3} />
-                <KpiCard title="平均案件粗利" value={kpi?.avgProfit ?? "---"} icon={Building2} />
+                <KpiCard title="売上合計" value={kpi?.salesTotal ?? "---"} icon={Building2} />
               </div>
               <RankingTable onProjectClick={(id, name) => setPage({ name: "ledger", projectId: id, projectName: name })} />
             </>
