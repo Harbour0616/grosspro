@@ -39,6 +39,7 @@ interface ProjectDetail {
   costAmount: number;
   grossProfit: number;
   profitRate: number;
+  endMonth: string | null;
 }
 
 interface RankingTableProps {
@@ -95,7 +96,7 @@ export default function RankingTable({ onProjectClick }: RankingTableProps) {
     }
     setExpandedId(staffId);
     setLoadingDetail(true);
-    const { data: pj } = await supabase.from("projects").select("id, name, contract_amount, cost_amount").eq("staff_id", staffId);
+    const { data: pj } = await supabase.from("projects").select("id, name, contract_amount, cost_amount, end_month").eq("staff_id", staffId);
     if (!pj) { setLoadingDetail(false); return; }
 
     const rows: ProjectDetail[] = pj.map((p) => {
@@ -103,7 +104,7 @@ export default function RankingTable({ onProjectClick }: RankingTableProps) {
       const cost = p.cost_amount ?? 0;
       const grossProfit = contract - cost;
       const profitRate = contract > 0 ? (grossProfit / contract) * 100 : 0;
-      return { id: p.id, name: p.name, contractAmount: contract, costAmount: cost, grossProfit, profitRate };
+      return { id: p.id, name: p.name, contractAmount: contract, costAmount: cost, grossProfit, profitRate, endMonth: p.end_month ?? null };
     });
     setDetails(rows);
     setLoadingDetail(false);
@@ -163,17 +164,7 @@ export default function RankingTable({ onProjectClick }: RankingTableProps) {
                         {entry.rank}
                       </span>
                     </td>
-                    <td className="px-4 md:px-6 py-4">
-                      <span className="font-semibold text-foreground">{entry.name}</span>
-                      {entry.projects > 0 && (
-                        <span className={cn(
-                          "ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium",
-                          entry.inProgressCount > 0 ? "bg-kpi-amber/10 text-kpi-amber" : "bg-primary/10 text-primary"
-                        )}>
-                          {entry.inProgressCount > 0 ? `進行中 ${entry.inProgressCount}件` : "完工済"}
-                        </span>
-                      )}
-                    </td>
+                    <td className="px-4 md:px-6 py-4 font-semibold text-foreground">{entry.name}</td>
                     <td className="px-4 md:px-6 py-4 text-right text-sm text-foreground tabular-nums">{fmt(entry.totalContract)}</td>
                     <td className="px-4 md:px-6 py-4 text-right text-sm text-foreground tabular-nums">{fmt(entry.totalCost)}</td>
                     <td className="px-4 md:px-6 py-4 text-right font-semibold text-foreground tabular-nums">{fmt(entry.grossProfit)}</td>
@@ -213,14 +204,22 @@ export default function RankingTable({ onProjectClick }: RankingTableProps) {
                                 {details.map((d) => (
                                   <tr key={d.id} className="border-t border-border/50">
                                     <td className="py-2 text-sm text-foreground">
-                                      {onProjectClick ? (
-                                        <button
-                                          onClick={(e) => { e.stopPropagation(); onProjectClick(d.id, d.name); }}
-                                          className="hover:text-primary hover:underline transition-colors text-left"
-                                        >
-                                          {d.name}
-                                        </button>
-                                      ) : d.name}
+                                      <span className="inline-flex items-center gap-2">
+                                        {onProjectClick ? (
+                                          <button
+                                            onClick={(e) => { e.stopPropagation(); onProjectClick(d.id, d.name); }}
+                                            className="hover:text-primary hover:underline transition-colors text-left"
+                                          >
+                                            {d.name}
+                                          </button>
+                                        ) : d.name}
+                                        <span className={cn(
+                                          "inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium whitespace-nowrap",
+                                          d.endMonth ? "bg-primary/10 text-primary" : "bg-kpi-amber/10 text-kpi-amber"
+                                        )}>
+                                          {d.endMonth ? "完工" : "進行中"}
+                                        </span>
+                                      </span>
                                     </td>
                                     <td className="py-2 text-right text-sm text-foreground">{fmt(d.contractAmount)}</td>
                                     <td className="py-2 text-right text-sm text-foreground">{fmt(d.costAmount)}</td>
