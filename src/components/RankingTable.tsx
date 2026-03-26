@@ -17,7 +17,7 @@ interface RankingEntry {
   rank: number;
   staffId: string;
   name: string;
-  totalSales: number;
+  totalContract: number;
   totalCost: number;
   grossProfit: number;
   profitRate: number;
@@ -27,8 +27,8 @@ interface RankingEntry {
 interface ProjectDetail {
   id: string;
   name: string;
-  salesAmount: number;
-  totalCost: number;
+  contractAmount: number;
+  costAmount: number;
   grossProfit: number;
   profitRate: number;
 }
@@ -57,19 +57,16 @@ export default function RankingTable({ onProjectClick }: RankingTableProps) {
   useEffect(() => {
     async function load() {
       const { data: staff } = await supabase.from("staff").select("id, name");
-      const { data: projects } = await supabase.from("projects").select("id, staff_id, sales_amount");
-      const { data: costs } = await supabase.from("project_costs").select("project_id, amount");
-      if (!staff || !projects || !costs) return;
+      const { data: projects } = await supabase.from("projects").select("id, staff_id, contract_amount, cost_amount");
+      if (!staff || !projects) return;
 
       const entries = staff.map((s) => {
         const myProjects = projects.filter((p) => p.staff_id === s.id);
-        const totalSales = myProjects.reduce((sum, p) => sum + (p.sales_amount ?? 0), 0);
-        const totalCost = myProjects.reduce((sum, p) => {
-          return sum + costs.filter((c) => c.project_id === p.id).reduce((a, b) => a + (b.amount ?? 0), 0);
-        }, 0);
-        const grossProfit = totalSales - totalCost;
-        const profitRate = totalSales > 0 ? (grossProfit / totalSales) * 100 : 0;
-        return { staffId: s.id, name: s.name, totalSales, totalCost, grossProfit, profitRate, projects: myProjects.length };
+        const totalContract = myProjects.reduce((sum, p) => sum + (p.contract_amount ?? 0), 0);
+        const totalCost = myProjects.reduce((sum, p) => sum + (p.cost_amount ?? 0), 0);
+        const grossProfit = totalContract - totalCost;
+        const profitRate = totalContract > 0 ? (grossProfit / totalContract) * 100 : 0;
+        return { staffId: s.id, name: s.name, totalContract, totalCost, grossProfit, profitRate, projects: myProjects.length };
       });
 
       setData(entries.sort((a, b) => b.grossProfit - a.grossProfit).map((e, i) => ({ ...e, rank: i + 1 })));
@@ -84,20 +81,15 @@ export default function RankingTable({ onProjectClick }: RankingTableProps) {
     }
     setExpandedId(staffId);
     setLoadingDetail(true);
-    const [{ data: pj }, { data: costs }] = await Promise.all([
-      supabase.from("projects").select("id, name, sales_amount").eq("staff_id", staffId),
-      supabase.from("project_costs").select("project_id, amount"),
-    ]);
+    const { data: pj } = await supabase.from("projects").select("id, name, contract_amount, cost_amount").eq("staff_id", staffId);
     if (!pj) { setLoadingDetail(false); return; }
 
     const rows: ProjectDetail[] = pj.map((p) => {
-      const totalCost = (costs ?? [])
-        .filter((c) => c.project_id === p.id)
-        .reduce((sum, c) => sum + (c.amount ?? 0), 0);
-      const sales = p.sales_amount ?? 0;
-      const grossProfit = sales - totalCost;
-      const profitRate = sales > 0 ? (grossProfit / sales) * 100 : 0;
-      return { id: p.id, name: p.name, salesAmount: sales, totalCost, grossProfit, profitRate };
+      const contract = p.contract_amount ?? 0;
+      const cost = p.cost_amount ?? 0;
+      const grossProfit = contract - cost;
+      const profitRate = contract > 0 ? (grossProfit / contract) * 100 : 0;
+      return { id: p.id, name: p.name, contractAmount: contract, costAmount: cost, grossProfit, profitRate };
     });
     setDetails(rows);
     setLoadingDetail(false);
@@ -115,8 +107,8 @@ export default function RankingTable({ onProjectClick }: RankingTableProps) {
             <tr className="border-t border-border bg-kpi-surface/50">
               <th className="text-left text-xs font-medium text-muted-foreground px-4 md:px-6 py-3 w-12 md:w-16">順位</th>
               <th className="text-left text-xs font-medium text-muted-foreground px-4 md:px-6 py-3 min-w-[80px]">担当者</th>
-              <th className="text-right text-xs font-medium text-muted-foreground px-4 md:px-6 py-3 min-w-[90px]">売上合計</th>
-              <th className="text-right text-xs font-medium text-muted-foreground px-4 md:px-6 py-3 min-w-[90px]">原価合計</th>
+              <th className="text-right text-xs font-medium text-muted-foreground px-4 md:px-6 py-3 min-w-[90px]">契約合計</th>
+              <th className="text-right text-xs font-medium text-muted-foreground px-4 md:px-6 py-3 min-w-[90px]">経費合計</th>
               <th className="text-right text-xs font-medium text-muted-foreground px-4 md:px-6 py-3 min-w-[90px]">粗利額</th>
               <th className="text-right text-xs font-medium text-muted-foreground px-4 md:px-6 py-3">粗利率</th>
               <th className="text-right text-xs font-medium text-muted-foreground px-4 md:px-6 py-3">案件数</th>
@@ -142,7 +134,7 @@ export default function RankingTable({ onProjectClick }: RankingTableProps) {
                       </span>
                     </td>
                     <td className="px-4 md:px-6 py-4 font-semibold text-foreground">{entry.name}</td>
-                    <td className="px-4 md:px-6 py-4 text-right text-sm text-foreground tabular-nums">{fmt(entry.totalSales)}</td>
+                    <td className="px-4 md:px-6 py-4 text-right text-sm text-foreground tabular-nums">{fmt(entry.totalContract)}</td>
                     <td className="px-4 md:px-6 py-4 text-right text-sm text-foreground tabular-nums">{fmt(entry.totalCost)}</td>
                     <td className="px-4 md:px-6 py-4 text-right font-semibold text-foreground tabular-nums">{fmt(entry.grossProfit)}</td>
                     <td className="px-4 md:px-6 py-4 text-right">
@@ -171,8 +163,8 @@ export default function RankingTable({ onProjectClick }: RankingTableProps) {
                               <thead>
                                 <tr>
                                   <th className="text-left text-xs font-medium text-muted-foreground pb-2">工事名</th>
-                                  <th className="text-right text-xs font-medium text-muted-foreground pb-2">売上金額</th>
-                                  <th className="text-right text-xs font-medium text-muted-foreground pb-2">原価合計</th>
+                                  <th className="text-right text-xs font-medium text-muted-foreground pb-2">契約金額</th>
+                                  <th className="text-right text-xs font-medium text-muted-foreground pb-2">現場経費</th>
                                   <th className="text-right text-xs font-medium text-muted-foreground pb-2">粗利</th>
                                   <th className="text-right text-xs font-medium text-muted-foreground pb-2">粗利率</th>
                                 </tr>
@@ -190,8 +182,8 @@ export default function RankingTable({ onProjectClick }: RankingTableProps) {
                                         </button>
                                       ) : d.name}
                                     </td>
-                                    <td className="py-2 text-right text-sm text-foreground">{fmt(d.salesAmount)}</td>
-                                    <td className="py-2 text-right text-sm text-foreground">{fmt(d.totalCost)}</td>
+                                    <td className="py-2 text-right text-sm text-foreground">{fmt(d.contractAmount)}</td>
+                                    <td className="py-2 text-right text-sm text-foreground">{fmt(d.costAmount)}</td>
                                     <td className="py-2 text-right text-sm font-semibold text-foreground">{fmt(d.grossProfit)}</td>
                                     <td className="py-2 text-right">
                                       <span className={cn(

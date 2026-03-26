@@ -14,9 +14,8 @@ interface Project {
   customer_name: string | null;
   staff_id: string | null;
   contract_amount: number | null;
-  sales_amount: number | null;
+  cost_amount: number | null;
   staff?: Staff;
-  totalCost: number;
   grossProfit: number;
   profitRate: number;
 }
@@ -25,46 +24,28 @@ export default function Projects() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [staffList, setStaffList] = useState<Staff[]>([]);
   const [showForm, setShowForm] = useState(false);
-  const [form, setForm] = useState({
-    name: "",
-    customer_name: "",
-    staff_id: "",
-    contract_amount: "",
-  });
+  const [form, setForm] = useState({ name: "", customer_name: "", staff_id: "", contract_amount: "" });
   const [saving, setSaving] = useState(false);
   const [inlineEditId, setInlineEditId] = useState<string | null>(null);
   const [inlineValue, setInlineValue] = useState("");
   const [inlineSaving, setInlineSaving] = useState(false);
   const [editTarget, setEditTarget] = useState<Project | null>(null);
-  const [editForm, setEditForm] = useState({
-    name: "",
-    customer_name: "",
-    staff_id: "",
-  });
+  const [editForm, setEditForm] = useState({ name: "", customer_name: "", staff_id: "" });
 
   async function load() {
-    const [{ data: pj }, { data: st }, { data: costs }] = await Promise.all([
-      supabase.from("projects").select("id, name, customer_name, staff_id, contract_amount, sales_amount"),
+    const [{ data: pj }, { data: st }] = await Promise.all([
+      supabase.from("projects").select("id, name, customer_name, staff_id, contract_amount, cost_amount"),
       supabase.from("staff").select("id, name"),
-      supabase.from("project_costs").select("project_id, amount"),
     ]);
     if (!pj || !st) return;
     setStaffList(st);
 
     const mapped: Project[] = pj.map((p) => {
-      const totalCost = (costs ?? [])
-        .filter((c) => c.project_id === p.id)
-        .reduce((sum, c) => sum + (c.amount ?? 0), 0);
       const contract = p.contract_amount ?? 0;
-      const grossProfit = contract - totalCost;
+      const cost = p.cost_amount ?? 0;
+      const grossProfit = contract - cost;
       const profitRate = contract > 0 ? (grossProfit / contract) * 100 : 0;
-      return {
-        ...p,
-        staff: st.find((s) => s.id === p.staff_id),
-        totalCost,
-        grossProfit,
-        profitRate,
-      };
+      return { ...p, staff: st.find((s) => s.id === p.staff_id), grossProfit, profitRate };
     });
     setProjects(mapped);
   }
@@ -89,11 +70,7 @@ export default function Projects() {
 
   function openEdit(p: Project) {
     setEditTarget(p);
-    setEditForm({
-      name: p.name,
-      customer_name: p.customer_name ?? "",
-      staff_id: p.staff_id ?? "",
-    });
+    setEditForm({ name: p.name, customer_name: p.customer_name ?? "", staff_id: p.staff_id ?? "" });
   }
 
   async function handleEditSave(e: React.FormEvent) {
@@ -113,7 +90,6 @@ export default function Projects() {
 
   async function handleDelete(p: Project) {
     if (!confirm(`「${p.name}」を本当に削除しますか？`)) return;
-    await supabase.from("project_costs").delete().eq("project_id", p.id);
     const { error } = await supabase.from("projects").delete().eq("id", p.id);
     if (error) { alert("削除失敗: " + error.message); return; }
     load();
@@ -153,50 +129,25 @@ export default function Projects() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-foreground mb-1">工事名 *</label>
-              <input
-                required
-                value={form.name}
-                onChange={(e) => setForm({ ...form, name: e.target.value })}
-                className="w-full px-3 py-2 rounded-lg border border-input bg-background text-foreground text-sm"
-              />
+              <input required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="w-full px-3 py-2 rounded-lg border border-input bg-background text-foreground text-sm" />
             </div>
             <div>
               <label className="block text-sm font-medium text-foreground mb-1">顧客名</label>
-              <input
-                value={form.customer_name}
-                onChange={(e) => setForm({ ...form, customer_name: e.target.value })}
-                className="w-full px-3 py-2 rounded-lg border border-input bg-background text-foreground text-sm"
-              />
+              <input value={form.customer_name} onChange={(e) => setForm({ ...form, customer_name: e.target.value })} className="w-full px-3 py-2 rounded-lg border border-input bg-background text-foreground text-sm" />
             </div>
             <div>
               <label className="block text-sm font-medium text-foreground mb-1">担当者</label>
-              <select
-                value={form.staff_id}
-                onChange={(e) => setForm({ ...form, staff_id: e.target.value })}
-                className="w-full px-3 py-2 rounded-lg border border-input bg-background text-foreground text-sm"
-              >
+              <select value={form.staff_id} onChange={(e) => setForm({ ...form, staff_id: e.target.value })} className="w-full px-3 py-2 rounded-lg border border-input bg-background text-foreground text-sm">
                 <option value="">未選択</option>
-                {staffList.map((s) => (
-                  <option key={s.id} value={s.id}>{s.name}</option>
-                ))}
+                {staffList.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
               </select>
             </div>
             <div>
               <label className="block text-sm font-medium text-foreground mb-1">請負金額</label>
-              <input
-                type="number"
-                value={form.contract_amount}
-                onChange={(e) => setForm({ ...form, contract_amount: e.target.value })}
-                className="w-full px-3 py-2 rounded-lg border border-input bg-background text-foreground text-sm"
-                placeholder="例: 50000000"
-              />
+              <input type="number" value={form.contract_amount} onChange={(e) => setForm({ ...form, contract_amount: e.target.value })} className="w-full px-3 py-2 rounded-lg border border-input bg-background text-foreground text-sm" placeholder="例: 50000000" />
             </div>
           </div>
-          <button
-            type="submit"
-            disabled={saving}
-            className="px-6 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-50"
-          >
+          <button type="submit" disabled={saving} className="px-6 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-50">
             {saving ? "登録中..." : "登録"}
           </button>
         </form>
@@ -209,11 +160,11 @@ export default function Projects() {
               <tr className="border-b border-border bg-kpi-surface/50">
                 <th className="text-left text-xs font-medium text-muted-foreground px-4 md:px-6 py-3 min-w-[120px]">工事名</th>
                 <th className="text-left text-xs font-medium text-muted-foreground px-4 md:px-6 py-3 min-w-[80px]">顧客名</th>
-                <th className="text-left text-xs font-medium text-muted-foreground px-4 md:px-6 py-3 min-w-[70px]">担当者</th>
-                <th className="text-right text-xs font-medium text-muted-foreground px-4 md:px-6 py-3 min-w-[90px]">請負金額</th>
-                <th className="text-right text-xs font-medium text-muted-foreground px-4 md:px-6 py-3 min-w-[90px]">原価合計</th>
+                <th className="text-right text-xs font-medium text-muted-foreground px-4 md:px-6 py-3 min-w-[90px]">契約金額</th>
+                <th className="text-right text-xs font-medium text-muted-foreground px-4 md:px-6 py-3 min-w-[90px]">現場経費</th>
                 <th className="text-right text-xs font-medium text-muted-foreground px-4 md:px-6 py-3 min-w-[90px]">粗利</th>
                 <th className="text-right text-xs font-medium text-muted-foreground px-4 md:px-6 py-3 min-w-[70px]">粗利率</th>
+                <th className="text-left text-xs font-medium text-muted-foreground px-4 md:px-6 py-3 min-w-[90px]">担当者</th>
                 <th className="text-right text-xs font-medium text-muted-foreground px-4 md:px-6 py-3 w-20">操作</th>
               </tr>
             </thead>
@@ -222,7 +173,6 @@ export default function Projects() {
                 <tr key={p.id} className="border-t border-border hover:bg-kpi-surface/30 transition-colors">
                   <td className="px-4 md:px-6 py-4 font-semibold text-foreground">{p.name}</td>
                   <td className="px-4 md:px-6 py-4 text-sm text-muted-foreground">{p.customer_name ?? "-"}</td>
-                  <td className="px-4 md:px-6 py-4 text-sm text-foreground">{p.staff?.name ?? "-"}</td>
                   <td className="px-4 md:px-6 py-1 text-right text-sm text-foreground tabular-nums">
                     {inlineEditId === p.id ? (
                       inlineSaving ? (
@@ -239,15 +189,12 @@ export default function Projects() {
                         />
                       )
                     ) : (
-                      <button
-                        onClick={() => startInlineEdit(p)}
-                        className="w-full text-right py-3 hover:text-primary transition-colors cursor-pointer"
-                      >
+                      <button onClick={() => startInlineEdit(p)} className="w-full text-right py-3 hover:text-primary transition-colors cursor-pointer">
                         {p.contract_amount ? fmt(p.contract_amount) : "-"}
                       </button>
                     )}
                   </td>
-                  <td className="px-4 md:px-6 py-4 text-right text-sm text-foreground tabular-nums">{fmt(p.totalCost)}</td>
+                  <td className="px-4 md:px-6 py-4 text-right text-sm text-foreground tabular-nums">{(p.cost_amount ?? 0) > 0 ? fmt(p.cost_amount!) : "-"}</td>
                   <td className="px-4 md:px-6 py-4 text-right font-semibold text-foreground tabular-nums">
                     {(p.contract_amount ?? 0) > 0 ? fmt(p.grossProfit) : "-"}
                   </td>
@@ -261,20 +208,13 @@ export default function Projects() {
                       </span>
                     ) : "-"}
                   </td>
+                  <td className="px-4 md:px-6 py-4 text-sm text-foreground">{p.staff?.name ?? "-"}</td>
                   <td className="px-4 md:px-6 py-4 text-right">
                     <div className="inline-flex gap-1">
-                      <button
-                        onClick={() => openEdit(p)}
-                        className="p-2.5 rounded-lg hover:bg-primary/10 text-muted-foreground hover:text-primary transition-colors"
-                        title="編集"
-                      >
+                      <button onClick={() => openEdit(p)} className="p-2.5 rounded-lg hover:bg-primary/10 text-muted-foreground hover:text-primary transition-colors" title="編集">
                         <Pencil className="w-4 h-4" />
                       </button>
-                      <button
-                        onClick={() => handleDelete(p)}
-                        className="p-2.5 rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
-                        title="削除"
-                      >
+                      <button onClick={() => handleDelete(p)} className="p-2.5 rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors" title="削除">
                         <Trash2 className="w-4 h-4" />
                       </button>
                     </div>
@@ -283,9 +223,7 @@ export default function Projects() {
               ))}
               {projects.length === 0 && (
                 <tr>
-                  <td colSpan={8} className="px-6 py-12 text-center text-muted-foreground">
-                    工事データがありません
-                  </td>
+                  <td colSpan={8} className="px-6 py-12 text-center text-muted-foreground">工事データがありません</td>
                 </tr>
               )}
             </tbody>
@@ -297,10 +235,7 @@ export default function Projects() {
       {editTarget && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
           <div className="absolute inset-0 bg-black/40" onClick={() => setEditTarget(null)} />
-          <form
-            onSubmit={handleEditSave}
-            className="relative z-10 w-full max-w-lg rounded-2xl bg-card border border-border p-6 space-y-4 shadow-xl"
-          >
+          <form onSubmit={handleEditSave} className="relative z-10 w-full max-w-lg rounded-2xl bg-card border border-border p-6 space-y-4 shadow-xl">
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-bold text-foreground">工事編集</h3>
               <button type="button" onClick={() => setEditTarget(null)} className="p-1 rounded-lg hover:bg-muted transition-colors">
@@ -310,48 +245,23 @@ export default function Projects() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-foreground mb-1">工事名 *</label>
-                <input
-                  required
-                  value={editForm.name}
-                  onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
-                  className="w-full px-3 py-2 rounded-lg border border-input bg-background text-foreground text-sm"
-                />
+                <input required value={editForm.name} onChange={(e) => setEditForm({ ...editForm, name: e.target.value })} className="w-full px-3 py-2 rounded-lg border border-input bg-background text-foreground text-sm" />
               </div>
               <div>
                 <label className="block text-sm font-medium text-foreground mb-1">顧客名</label>
-                <input
-                  value={editForm.customer_name}
-                  onChange={(e) => setEditForm({ ...editForm, customer_name: e.target.value })}
-                  className="w-full px-3 py-2 rounded-lg border border-input bg-background text-foreground text-sm"
-                />
+                <input value={editForm.customer_name} onChange={(e) => setEditForm({ ...editForm, customer_name: e.target.value })} className="w-full px-3 py-2 rounded-lg border border-input bg-background text-foreground text-sm" />
               </div>
               <div>
                 <label className="block text-sm font-medium text-foreground mb-1">担当者</label>
-                <select
-                  value={editForm.staff_id}
-                  onChange={(e) => setEditForm({ ...editForm, staff_id: e.target.value })}
-                  className="w-full px-3 py-2 rounded-lg border border-input bg-background text-foreground text-sm"
-                >
+                <select value={editForm.staff_id} onChange={(e) => setEditForm({ ...editForm, staff_id: e.target.value })} className="w-full px-3 py-2 rounded-lg border border-input bg-background text-foreground text-sm">
                   <option value="">未選択</option>
-                  {staffList.map((s) => (
-                    <option key={s.id} value={s.id}>{s.name}</option>
-                  ))}
+                  {staffList.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
                 </select>
               </div>
             </div>
             <div className="flex justify-end gap-3 pt-2">
-              <button
-                type="button"
-                onClick={() => setEditTarget(null)}
-                className="px-4 py-2 rounded-lg border border-border text-sm font-medium text-foreground hover:bg-muted transition-colors"
-              >
-                キャンセル
-              </button>
-              <button
-                type="submit"
-                disabled={saving}
-                className="px-6 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-50"
-              >
+              <button type="button" onClick={() => setEditTarget(null)} className="px-4 py-2 rounded-lg border border-border text-sm font-medium text-foreground hover:bg-muted transition-colors">キャンセル</button>
+              <button type="submit" disabled={saving} className="px-6 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-50">
                 {saving ? "保存中..." : "保存"}
               </button>
             </div>
