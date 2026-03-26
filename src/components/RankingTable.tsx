@@ -176,64 +176,48 @@ export default function RankingTable(_props: RankingTableProps) {
                       {isOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
                     </td>
                   </tr>
-                  <tr key={`${entry.staffId}-detail`}>
-                    <td colSpan={8} className="p-0">
-                      <div
-                        className="overflow-hidden"
-                        style={{
-                          maxHeight: isOpen ? 2000 : 0,
-                          opacity: isOpen ? 1 : 0,
-                          transition: "max-height 0.3s ease-in-out, opacity 0.2s ease-in-out",
-                        }}
-                      >
-                        <div className="bg-kpi-surface/40 px-6 py-4">
-                          {details.length === 0 ? (
-                            <p className="text-sm text-muted-foreground py-2">担当工事がありません</p>
-                          ) : (
-                            <table className="w-full" style={{ tableLayout: "fixed" }}>
-                              <thead>
-                                <tr>
-                                  <th className="text-left text-xs font-medium text-muted-foreground pb-2" style={{ width: "28%" }}>工事名</th>
-                                  <th className="text-right text-xs font-medium text-muted-foreground pb-2" style={{ width: "18%" }}>売上</th>
-                                  <th className="text-right text-xs font-medium text-muted-foreground pb-2" style={{ width: "18%" }}>原価</th>
-                                  <th className="text-right text-xs font-medium text-muted-foreground pb-2" style={{ width: "18%" }}>粗利</th>
-                                  <th className="text-right text-xs font-medium text-muted-foreground pb-2" style={{ width: "18%" }}>粗利率</th>
-                                </tr>
-                              </thead>
-                              <tbody>
-                                {details.map((d) => (
-                                  <tr key={d.id} className="border-t border-border/50">
-                                    <td className="py-2 text-sm text-foreground overflow-hidden text-ellipsis whitespace-nowrap">
-                                      <span className="inline-flex items-center gap-2">
-                                        <span className="overflow-hidden text-ellipsis whitespace-nowrap">{d.name}</span>
-                                        <span className={cn(
-                                          "inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium whitespace-nowrap",
-                                          d.endMonth ? "bg-primary/10 text-primary" : "bg-kpi-amber/10 text-kpi-amber"
-                                        )}>
-                                          {d.endMonth ? "完工" : "進行中"}
-                                        </span>
-                                      </span>
-                                    </td>
-                                    <td className="py-2 text-right text-sm text-foreground">{fmt(d.contractAmount)}</td>
-                                    <td className="py-2 text-right text-sm text-foreground">{fmt(d.costAmount)}</td>
-                                    <td className="py-2 text-right text-sm font-semibold text-foreground">{fmt(d.grossProfit)}</td>
-                                    <td className="py-2 text-right">
-                                      <span className={cn(
-                                        "inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium",
-                                        rateColor(d.profitRate)
-                                      )}>
-                                        {d.profitRate.toFixed(1)}%
-                                      </span>
-                                    </td>
-                                  </tr>
-                                ))}
-                              </tbody>
-                            </table>
-                          )}
-                        </div>
-                      </div>
-                    </td>
-                  </tr>
+                  {details.length === 0 && isOpen ? (
+                    <tr key={`${entry.staffId}-empty`} className="bg-kpi-surface/40">
+                      <td />
+                      <td colSpan={7} className="px-4 md:px-6 py-3 text-sm text-muted-foreground">担当工事がありません</td>
+                    </tr>
+                  ) : details.map((d) => (
+                    <tr
+                      key={d.id}
+                      className="bg-kpi-surface/40 overflow-hidden"
+                      style={{
+                        maxHeight: isOpen ? 100 : 0,
+                        opacity: isOpen ? 1 : 0,
+                        transition: "max-height 0.3s ease-in-out, opacity 0.2s ease-in-out",
+                      }}
+                    >
+                      <td />
+                      <td className="px-4 md:px-6 py-2 text-sm text-foreground">
+                        <span className="inline-flex items-center gap-2">
+                          <span>{d.name}</span>
+                          <span className={cn(
+                            "inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium whitespace-nowrap",
+                            d.endMonth ? "bg-primary/10 text-primary" : "bg-kpi-amber/10 text-kpi-amber"
+                          )}>
+                            {d.endMonth ? "完工" : "進行中"}
+                          </span>
+                        </span>
+                      </td>
+                      <td />
+                      <td className="px-4 md:px-6 py-2 text-right text-sm text-foreground tabular-nums">{fmt(d.contractAmount)}</td>
+                      <td className="px-4 md:px-6 py-2 text-right text-sm text-foreground tabular-nums">{fmt(d.costAmount)}</td>
+                      <td className="px-4 md:px-6 py-2 text-right text-sm font-semibold text-foreground tabular-nums">{fmt(d.grossProfit)}</td>
+                      <td className="px-4 md:px-6 py-2 text-right">
+                        <span className={cn(
+                          "inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium",
+                          rateColor(d.profitRate)
+                        )}>
+                          {d.profitRate.toFixed(1)}%
+                        </span>
+                      </td>
+                      <td />
+                    </tr>
+                  ))}
                 </>
               );
             })}
